@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RUTIK GADAKH | Futuristic Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --primary: #ffcc00;   /* Gold */
+            --cyan: #00f3ff;      /* Neon Cyan */
+            --purple: #bc13fe;    /* Neon Purple */
+            --bg: #050505;
+            --text: #ffffff;
+            --glass: rgba(10, 10, 20, 0.8);
+            --border: rgba(255, 204, 0, 0.3);
+            --alert: #ff0044;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        @media (max-width: 768px) { * { cursor: auto; } }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
+        #morph-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0e0e14 0%, #000 100%);
+        }
+
+        h1, h2, h3, h4 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
+
+        /* --- HEADER STYLES --- */
+        header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 30px 0; border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+        }
+        .brand { text-align: left; }
+        .brand h1 { 
+            font-size: 2.2rem; 
+            background: linear-gradient(90deg, var(--primary), var(--cyan)); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 3px; line-height: 1; 
+        }
+        .brand-sub { 
+            font-size: 0.9rem; color: #fff; letter-spacing: 1px; 
+            margin-top: 5px; opacity: 0.9; font-weight: 300;
+        }
+        .brand-sub b { color: var(--purple); font-family: 'Orbitron'; }
+
+        .header-socials { display: flex; gap: 20px; }
+        .social-link { color: var(--text); font-size: 1.5rem; transition: 0.3s; position: relative; }
+        .social-link:hover { color: var(--cyan); transform: scale(1.1); text-shadow: 0 0 10px var(--cyan); }
+
+        /* --- INTRO MODAL --- */
+        #intro-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.96); z-index: 11000;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(15px);
+        }
+        .intro-content {
+            background: #0a0a0a; border: 2px solid var(--cyan);
+            padding: 30px; text-align: center; max-width: 600px; width: 90%;
+            border-radius: 12px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
+        }
+        .intro-title { color: var(--primary); font-size: 1.8rem; margin-bottom: 10px; letter-spacing: 2px; }
+        .section-header {
+            font-size: 0.9rem; color: #fff; background: #333; 
+            display: inline-block; padding: 4px 12px; border-radius: 4px;
+            margin-bottom: 15px; letter-spacing: 1px;
+        }
+        .gesture-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin-bottom: 25px; text-align: left;
+        }
+        .gesture-item {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255, 204, 0, 0.05); padding: 12px; border-radius: 8px;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+        }
+        .gesture-icon { font-size: 1.6rem; min-width: 30px; text-align: center; }
+        .gesture-text strong { display: block; color: var(--primary); font-size: 0.9rem; }
+        .gesture-text span { font-size: 0.8rem; color: #ccc; }
+        
+        .permission-box {
+            background: rgba(0, 243, 255, 0.1); border-left: 4px solid var(--cyan);
+            padding: 15px; margin-bottom: 25px; text-align: left;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .permission-text { font-size: 0.85rem; color: #ddd; line-height: 1.5; }
+        
+        /* HIGHLIGHTED BUTTON STYLE */
+        .enter-btn {
+            background: rgba(0, 243, 255, 0.1);
+            color: #fff; 
+            border: 2px solid var(--cyan); 
+            padding: 16px 0; width: 100%;
+            font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; border-radius: 6px; text-transform: uppercase;
+            box-shadow: 0 0 15px var(--cyan);
+            animation: pulse-glow 1.5s infinite alternate;
+            transition: 0.3s;
+        }
+        .enter-btn:hover { background: var(--cyan); color: #000; }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px var(--cyan); transform: scale(1); }
+            100% { box-shadow: 0 0 25px var(--cyan), 0 0 10px var(--purple); transform: scale(1.02); }
+        }
+
+        /* --- UI ELEMENTS --- */
+        #cursor {
+            position: fixed; top: 0; left: 0; width: 8px; height: 8px;
+            background: #fff; border: 1px solid var(--cyan); border-radius: 50%;
+            pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--cyan); mix-blend-mode: difference;
+        }
+
+        #ai-helper {
+            position: fixed; top: 0; left: 0; padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.9); border: 1px solid var(--cyan);
+            color: var(--cyan); font-size: 13px; border-radius: 0 20px 20px 20px;
+            pointer-events: none; z-index: 9998; opacity: 0; max-width: 250px;
+            backdrop-filter: blur(5px); white-space: pre-line;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; perspective: 1000px; }
+
+        .hero {
+            min-height: 70vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; pointer-events: none;
+        }
+        .hero h2 { 
+            font-size: 4rem; margin-bottom: 15px; pointer-events: all; 
+            background: linear-gradient(45deg, var(--primary), var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        }
+        .hero p { font-size: 1.3rem; max-width: 700px; line-height: 1.6; pointer-events: all; }
+        .tagline { color: var(--cyan); font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+
+        .grid-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin: 60px 0; }
+        
+        .card {
+            background: var(--glass); border: 1px solid var(--border);
+            padding: 30px; border-radius: 15px; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .tilt-card { transform-style: preserve-3d; transform: perspective(1000px); }
+        .tilt-card:hover { border-color: var(--cyan); box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); }
+
+        .card h3 { color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; }
+        
+        .pill {
+            background: rgba(255, 255, 255, 0.05); color: #fff; padding: 8px 16px; border-radius: 20px; 
+            font-size: 0.85rem; margin: 4px; display: inline-block; text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s;
+        }
+        .pill:hover { 
+            border-color: var(--cyan); background: rgba(0, 243, 255, 0.1); 
+            box-shadow: 0 0 15px var(--cyan); color: var(--cyan);
+        }
+
+        .brands-container { display: flex; flex-wrap: wrap; gap: 10px; line-height: 2; }
+        .brand-pill { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid var(--purple); }
+        .brand-pill:hover { border-color: var(--primary); background: linear-gradient(135deg, rgba(188, 19, 254, 0.2), rgba(0, 0, 0, 0)); box-shadow: 0 0 15px var(--purple); color: #fff; }
+
+        .webcam-container {
+            position: fixed; bottom: 20px; right: 20px; width: 160px; height: 120px;
+            border: 2px solid var(--cyan); border-radius: 10px; overflow: hidden;
+            z-index: 9000; opacity: 0.8; box-shadow: 0 0 20px var(--cyan);
+        }
+        .webcam-container video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .gesture-status { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: var(--cyan); font-size: 10px; text-align: center; padding: 2px; }
+
+        #detail-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 10000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #detail-modal.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: #050505; border: 2px solid var(--primary); padding: 40px; text-align: center; max-width: 600px;
+            box-shadow: 0 0 50px var(--primary); position: relative;
+        }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; color: var(--alert); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            #cursor, #ai-helper { display: none !important; }
+            .brand h1 { font-size: 1.6rem; }
+            .hero h2 { font-size: 2.5rem; }
+            .webcam-container { width: 100px; height: 75px; }
+            .header-socials { gap: 10px; }
+            .social-link { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- INTRO POPUP -->
+    <div id="intro-modal">
+        <div class="intro-content">
+            <h2 class="intro-title">SYSTEM INITIATED</h2>
+            <div class="section-header">GESTURE CONTROLS</div>
+            <div class="gesture-grid">
+                <div class="gesture-item"><div class="gesture-icon">☝️</div><div class="gesture-text"><strong>Index Up</strong><span>Scroll Up</span></div></div>
+                <div class="gesture-item"><div class="gesture-icon">✌️</div><div class="gesture-text"><strong>Two Up</strong><span>Scroll Down</span></div></div>
+                <!-- Updated Gesture Grid: Thumbs Up is only for this screen -->
+                <div class="gesture-item" style="grid-column: span 2; justify-content: center; border-color: var(--cyan);">
+                    <div class="gesture-icon">👍</div>
+                    <div class="gesture-text"><strong>Thumbs Up</strong><span>To "I Understand" & Enter</span></div>
+                </div>
+            </div>
+            <div class="section-header" style="background: rgba(0, 243, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan);">REQUIRED ACTION</div>
+            <div class="permission-box">
+                <div class="permission-text">For Gesture Control to work, please select:<br><b>"While using the app"</b> or <b>"Allow"</b><br>when prompted for Camera access.</div>
+            </div>
+            
+            <button class="enter-btn" id="start-btn" onclick="closeIntro()">I UNDERSTAND - ENTER SITE</button>
+        </div>
+    </div>
+
+    <canvas id="morph-canvas"></canvas>
+    <div id="cursor"></div>
+    <div id="ai-helper">Initializing AI...</div>
+    
+    <div class="webcam-container">
+        <video id="input_video" playsinline muted autoplay></video>
+        <div class="gesture-status" id="gesture-text">System Active</div>
+    </div>
+
+    <div id="detail-modal" onclick="closeModalByClick(event)">
+        <div class="modal-content">
+            <div class="close-btn" onclick="forceClose()">×</div>
+            <h2 style="color: var(--primary); margin-bottom: 20px;">CONTACT & INFO</h2>
+            <p>📍 Mumbai | 📞 +91 9082644145</p>
+            <p style="margin-bottom: 20px;">✉️ rutikvirtualworld@gmail.com</p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://www.linkedin.com/in/rutik-gadakh-422840328/" target="_blank" class="pill">LinkedIn</a>
+                <a href="https://wa.link/m06gjo" target="_blank" class="pill">WhatsApp</a>
+                <a href="https://www.instagram.com/ra.one_79/" target="_blank" class="pill">Instagram</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>RUTIK GADAKH</h1>
+                <p class="brand-sub">BUILDING A PERSONAL BRAND: <b>SWITCH RABBIT</b></p>
+            </div>
+            <div class="header-socials">
+                <a href="https://www.linkedin.com/in/rutik-gadakh-422840328/" target="_blank" class="social-link" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="https://wa.link/m06gjo" target="_blank" class="social-link" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://www.instagram.com/ra.one_79/" target="_blank" class="social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+        </header>
+
+        <section class="hero" data-ai="Profile Overview">
+            <p class="tagline">Marketing that moves. Ideas that scale.</p>
+            <h2>SWITCH RABBIT</h2>
+            <p style="font-size: 1rem; color: #ccc; margin-top: 20px;">
+                Full-Stack Digital Marketer with 3+ years of experience. Managed ₹10L+/month ad spend & delivered 50Cr+ engagement.
+            </p>
+        </section>
+
+        <section class="grid-section">
+            <div class="card tilt-card" data-ai="Core Competencies">
+                <h3><i class="fas fa-tools"></i> SKILLS</h3>
+                <div class="skills-list">
+                    <span class="pill">Performance Marketing</span><span class="pill">E-commerce Ads</span><span class="pill">Funnels & Automation</span><span class="pill">SEO</span><span class="pill">Copywriting</span><span class="pill">Analytics</span><span class="pill">Canva</span><span class="pill">WordPress</span><span class="pill">Apollo.io</span>
+                </div>
+            </div>
+            <div class="card tilt-card" data-ai="Traits">
+                <h3><i class="fas fa-fingerprint"></i> TRAITS</h3>
+                <div>
+                    <span class="pill" style="border-color: var(--cyan); color: var(--cyan);">Creative</span>
+                    <span class="pill" style="border-color: var(--purple); color: var(--purple);">Fast</span>
+                    <span class="pill" style="border-color: var(--primary); color: var(--primary);">Fearless</span>
+                    <span class="pill" style="border-color: var(--cyan); color: var(--cyan);">Strategic</span>
+                    <span class="pill" style="border-color: var(--purple); color: var(--purple);">Entrepreneurial</span>
+                </div>
+            </div>
+        </section>
+
+        <h2 style="color: var(--primary); border-bottom: 2px solid var(--border); display: inline-block;">EXPERIENCE LOG</h2>
+        <section class="grid-section">
+            <div class="card tilt-card" data-ai="Experience: eSynergies Services">
+                <h4>Performance Marketer</h4>
+                <small>eSynergies Services | 2025 – Present</small>
+                <p>Managed campaigns across 10+ industries; boosted conversions 40–60% via audience targeting.</p>
+                <a href="https://drive.google.com/drive/folders/1aCmzo28yx5dNH_YtAmTYb5-UGpA6ndNm?usp=drive_link" target="_blank" class="pill" style="margin-top:15px; border-color: var(--cyan); color: var(--cyan);"><i class="fas fa-folder-open"></i> Campaigns data</a>
+            </div>
+            <div class="card tilt-card" data-ai="Experience: Omved Therapies">
+                <h4>Marketing Asst. Manager</h4>
+                <small>Omved Therapies | 2024 – 2025</small>
+                <p>Handled Amazon, Flipkart & Shopify ads; ran full-funnel Meta + Google campaigns.</p>
+                <a href="https://drive.google.com/drive/folders/1iovEOvxBq7v1WmpXhzkUVKVFuirN6fR1?usp=drive_link" target="_blank" class="pill" style="margin-top:15px; border-color: var(--purple); color: var(--purple);"><i class="fas fa-briefcase"></i> Brand management</a>
+            </div>
+            <div class="card tilt-card" data-ai="Experience: Zen Entertainment">
+                <h4>Digital Marketing Executive</h4>
+                <small>Zen Entertainment | 2023 – 2024</small>
+                <p>Developed SEO-driven content and social media campaigns to grow audience reach.</p>
+                <a href="https://www.instagram.com/gravityzoneofficial/" target="_blank" class="pill" style="margin-top:15px; border-color: var(--primary); color: var(--primary);"><i class="fab fa-instagram"></i> Social media</a>
+            </div>
+        </section>
+
+        <div class="card" style="margin-bottom: 50px; border-color: var(--purple); box-shadow: 0 0 20px rgba(188, 19, 254, 0.1);" data-ai="Client Portfolio">
+            <h3 style="color: var(--purple); border-color: var(--purple);"><i class="fas fa-briefcase"></i> SELECTED BRANDS</h3>
+            <div class="brands-container">
+                <a href="https://sociazy.com/" target="_blank" class="pill brand-pill">Sociazy <i class="fas fa-external-link-alt"></i></a>
+                <a href="https://www.instagram.com/lapure.in/" target="_blank" class="pill brand-pill">Lapure <i class="fas fa-external-link-alt"></i></a>
+                <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view?usp=sharing" target="_blank" class="pill brand-pill">Space Interior</a>
+                <a href="https://drive.google.com/file/d/1u9ayYQe9aYPHbJAaFCqA4Dlg8qiTrZ8s/view?usp=sharing" target="_blank" class="pill brand-pill">Pure Energy</a>
+                <a href="https://drive.google.com/file/d/1uaX-gqjaJXM8gtFxd5mLfD-MGSIOqCKJ/view?usp=sharing" target="_blank" class="pill brand-pill">Prettislim</a>
+                <a href="https://drive.google.com/file/d/1zBByF3AYnLfnNmA-8d-Jf_85zivTyGoP/view?usp=sharing" target="_blank" class="pill brand-pill">Parshva</a>
+                <a href="https://drive.google.com/file/d/1LfYwl_lMS2GjkP-gPP7uKSZtPp7xOGTk/view?usp=sharing" target="_blank" class="pill brand-pill">Trustbiz</a>
+                <a href="https://drive.google.com/file/d/1LfYwl_lMS2GjkP-gPP7uKSZtPp7xOGTk/view?usp=sharing" target="_blank" class="pill brand-pill">Agi Healthcare</a>
+                <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view?usp=sharing" target="_blank" class="pill brand-pill">Marfo Strategies</a>
+                <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view?usp=sharing" target="_blank" class="pill brand-pill">First Brick Property</a>
+                <a href="https://drive.google.com/file/d/1WC7FSBGk1CTLWZDQQnaxTaBQ6yaE3L4M/view?usp=sharing" target="_blank" class="pill brand-pill">Jayesh Jani</a>
+                <a href="https://drive.google.com/file/d/1LfYwl_lMS2GjkP-gPP7uKSZtPp7xOGTk/view?usp=sharing" target="_blank" class="pill brand-pill">Hitesh Estate</a>
+                <a href="https://drive.google.com/file/d/1BpbkOzMlWli0J2-pH33q6ftSJrt64pEv/view?usp=sharing" target="_blank" class="pill brand-pill">Alcad</a>
+                <a href="https://drive.google.com/file/d/1viuTzqGVf8xHTTAMcVegl8CgT1i8bJuD/view?usp=sharing" target="_blank" class="pill brand-pill">Jaiswal Finance</a>
+                <a href="https://drive.google.com/file/d/1AZcLKBuECUIC9c3L5k_0PmVt9wuShJQR/view?usp=sharing" target="_blank" class="pill brand-pill">MM Group</a>
+                <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view?usp=sharing" target="_blank" class="pill brand-pill">Access Power Link</a>
+            </div>
+        </div>
+
+        <footer style="text-align: center; padding: 50px 0; color: #666;">
+            <p>© 2025 SWITCH RABBIT. All Systems Nominal.</p>
+        </footer>
+    </div>
+
+    <script>
+        function closeIntro() {
+            const intro = document.getElementById('intro-modal');
+            gsap.to(intro, { opacity: 0, duration: 0.8, onComplete: () => intro.style.display = 'none' });
+        }
+
+        const canvas = document.getElementById('morph-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+        const isMobile = window.innerWidth < 768;
+        const numShapeParticles = isMobile ? 2500 : 6500;
+        const colors = ["#ffcc00", "#00f3ff", "#bc13fe"];
+        let currentColor = colors[0];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+            defineShapes();
+        }
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.tx = this.x; this.ty = this.y;
+                this.size = Math.random() * 1.5 + 0.5; this.baseSize = this.size;
+                this.isActive = false; this.alpha = 0.75;
+                this.color = Math.random() > 0.8 ? colors[Math.floor(Math.random() * colors.length)] : null;
+            }
+            update(mouseX, mouseY) {
+                const ease = this.isActive ? 0.12 : 0.05;
+                this.x += (this.tx - this.x) * ease; this.y += (this.ty - this.y) * ease;
+                const dx = mouseX - this.x; const dy = mouseY - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const blackHoleRadius = isMobile ? 120 : 220;
+                if (dist < blackHoleRadius) {
+                    const pull = (blackHoleRadius - dist) / blackHoleRadius;
+                    this.x += dx * pull * 0.05; this.y += dy * pull * 0.05;
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color || currentColor; ctx.globalAlpha = this.alpha;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for(let i=0; i<numShapeParticles; i++) particles.push(new Particle());
+        }
+
+        function scanCanvas(tCtx) {
+            const imageData = tCtx.getImageData(0, 0, width, height).data;
+            const points = [];
+            for(let y=0; y<height; y+=3) {
+                for(let x=0; x<width; x+=3) { 
+                    if(imageData[((y * width + x) * 4) + 3] > 128) points.push({x, y}); 
+                }
+            }
+            return points;
+        }
+
+        function getPointsFromText(text, fontSize) {
+            const tCanvas = document.createElement('canvas'); 
+            const tCtx = tCanvas.getContext('2d');
+            tCanvas.width = width; tCanvas.height = height;
+            tCtx.font = "900 " + fontSize + "px 'Arial'"; 
+            tCtx.fillStyle = 'white'; tCtx.textAlign = 'center'; tCtx.textBaseline = 'middle';
+            tCtx.fillText(text, width/2, height/2);
+            return scanCanvas(tCtx);
+        }
+
+        let shapes = [], currentShapeIndex = 0, lastShapeTime = 0, mouseX = -1000, mouseY = -1000;
+        function defineShapes() {
+            const fs = Math.min(width, height);
+            shapes = [
+                getPointsFromText("SWITCH RABBIT", fs * 0.15),
+                getPointsFromText("STRATEGY", fs * 0.14),
+                getPointsFromText("CONVERSION", fs * 0.12)
+            ];
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            const now = Date.now();
+            if(now - lastShapeTime > 8000) {
+                currentShapeIndex = (currentShapeIndex + 1) % shapes.length;
+                lastShapeTime = now;
+                currentColor = colors[currentShapeIndex % colors.length];
+                const cp = shapes[currentShapeIndex];
+                const shuffledPoints = [...cp].sort(() => Math.random() - 0.5);
+                particles.forEach((p, i) => {
+                    if(i < shuffledPoints.length) { p.tx = shuffledPoints[i].x; p.ty = shuffledPoints[i].y; p.isActive = true; }
+                    else { p.tx = Math.random() * width; p.ty = Math.random() * height; p.isActive = false; }
+                });
+            }
+            particles.forEach(p => { p.update(mouseX, mouseY); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        setTimeout(() => { resize(); animate(); }, 500);
+
+        window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+        window.addEventListener('touchmove', e => { if (e.touches.length > 0) { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; } }, { passive: true });
+
+        const cursor = document.getElementById('cursor');
+        const aiHelper = document.getElementById('ai-helper');
+        if (!isMobile) {
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(aiHelper, { x: e.clientX + 20, y: e.clientY + 20, duration: 0.3 });
+            });
+        }
+
+        document.querySelectorAll('[data-ai]').forEach(el => {
+            el.addEventListener('mouseenter', () => { if(isMobile) return; aiHelper.innerText = "HUB ANALYSIS: " + el.getAttribute('data-ai'); aiHelper.style.opacity = 1; });
+            el.addEventListener('mouseleave', () => { aiHelper.style.opacity = 0; });
+        });
+
+        document.querySelectorAll('.tilt-card').forEach(card => {
+            if(isMobile) return;
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width/2; 
+                const y = e.clientY - rect.top - rect.height/2;
+                gsap.to(card, { rotationY: x/15, rotationX: -y/15, transformPerspective: 1000, duration: 0.1 });
+            });
+            card.addEventListener('mouseleave', () => { gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.5 }); });
+        });
+
+        const modal = document.getElementById('detail-modal');
+        function openModal() { modal.classList.add('active'); }
+        function forceClose() { modal.classList.remove('active'); }
+        function closeModalByClick(e) { if (e.target === modal) forceClose(); }
+        
+        const videoElement = document.getElementById('input_video');
+        const gestureText = document.getElementById('gesture-text');
+        const hands = new Hands({locateFile: (file) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        hands.onResults(onResults);
+        const camera = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 320, height: 240 });
+        camera.start();
+
+        function onResults(results) {
+            if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+            const lm = results.multiHandLandmarks[0];
+            let indexUp = lm[8].y < lm[6].y, middleUp = lm[12].y < lm[10].y, thumbUp = lm[4].y < lm[3].y - 0.05, thumbDown = lm[4].y > lm[3].y + 0.05;
+            
+            // Check if Intro Modal is still open
+            const introModal = document.getElementById('intro-modal');
+            if (introModal.style.display !== 'none') {
+                if (thumbUp) { 
+                    closeIntro(); // Thumbs up only works here
+                }
+                return; // Stop other gestures while intro is open
+            }
+
+            // Normal Site Gestures (Scroll only)
+            if (modal.classList.contains('active')) { 
+                // No gestures inside contact modal based on request, or maybe click to close
+                if(thumbDown) forceClose(); // Keep simple close logic if manually opened
+                return; 
+            }
+            
+            // Main Page Scrolling
+            if (indexUp && !middleUp) { window.scrollBy(0, -20); gestureText.innerText = "SCROLL_UP"; }
+            else if (indexUp && middleUp) { window.scrollBy(0, 20); gestureText.innerText = "SCROLL_DOWN"; }
+            else { gestureText.innerText = "ACTIVE"; }
+        }
+    </script>
+</body>
+</html>
