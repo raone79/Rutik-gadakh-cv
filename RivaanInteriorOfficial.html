@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rivaan Interiors | Futuristic Luxury Design</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@200;300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        /* --- 1. CORE VARIABLES & RESET --- */
+        :root {
+            --bg-color: #050505;
+            --text-main: #e0e0e0;
+            --text-muted: #999999;
+            --gold: #d4af37;
+            --gold-dim: #8a7020;
+            --card-bg: #0f0f0f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* Custom Gold Scrollbar (Desktop Only) */
+        @media (min-width: 1025px) {
+            ::-webkit-scrollbar { width: 8px; }
+            ::-webkit-scrollbar-track { background: #000; }
+            ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+        }
+
+        html, body {
+            overflow: hidden; 
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            height: 100%;
+            width: 100%;
+        }
+        
+        body {
+            cursor: none; /* Hidden on desktop, restored on mobile via media query */
+            opacity: 0; 
+            visibility: hidden;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; font-weight: 400; }
+        img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        a { text-decoration: none; color: inherit; cursor: none; }
+        button { cursor: none; }
+
+        /* --- 2. CUSTOM CURSOR (Desktop Only) --- */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 6px; height: 6px; background: var(--gold); }
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+        body.hovering .cursor-outline {
+            width: 70px; height: 70px;
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--gold);
+            mix-blend-mode: screen;
+        }
+        body.hovering .cursor-dot { opacity: 0; }
+
+        /* --- 3. PRELOADER --- */
+        .preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; visibility: visible;
+        }
+        .loader-text {
+            font-family: 'Playfair Display'; font-size: 2rem; color: var(--gold);
+            letter-spacing: 5px;
+        }
+        .loader-line {
+            width: 0%; height: 2px; background: var(--gold); margin-top: 15px;
+        }
+
+        /* --- 4. HEADER --- */
+        header {
+            position: fixed; width: 100%; padding: 25px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; mix-blend-mode: exclusion;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+        .logo { font-family: 'Playfair Display'; font-size: 1.6rem; letter-spacing: 2px; font-weight: 700; color: #fff; z-index: 102; }
+        
+        .nav-link { 
+            margin-left: 40px; font-size: 0.8rem; text-transform: uppercase; 
+            letter-spacing: 2px; position: relative; color: #fff; font-weight: 600;
+            opacity: 0.7; transition: 0.3s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--gold); opacity: 1; }
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 1px;
+            background: var(--gold);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none; flex-direction: column; gap: 6px; cursor: pointer; z-index: 102;
+        }
+        .bar { width: 30px; height: 2px; background: #fff; transition: 0.3s; }
+
+        .mobile-menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050505; z-index: 101;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.5s ease;
+        }
+        .mobile-menu-overlay.open { opacity: 1; pointer-events: all; }
+        .mobile-link {
+            font-family: 'Playfair Display'; font-size: 2.5rem; color: #fff;
+            margin: 15px 0; opacity: 0; transform: translateY(20px); transition: 0.4s;
+        }
+        .mobile-menu-overlay.open .mobile-link { opacity: 1; transform: translateY(0); }
+        .mobile-link:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-link:nth-child(2) { transition-delay: 0.2s; }
+        .mobile-link:nth-child(3) { transition-delay: 0.3s; }
+        .mobile-link:nth-child(4) { transition-delay: 0.4s; }
+
+
+        /* --- 5. MAIN TAB SYSTEM --- */
+        main { position: relative; width: 100vw; height: 100vh; }
+
+        .tab-section {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto; /* Internal Scroll Enabled */
+            -webkit-overflow-scrolling: touch; 
+            padding-top: 0; 
+            opacity: 0; visibility: hidden; pointer-events: none;
+            background-color: var(--bg-color);
+            outline: none; /* Remove focus outline */
+        }
+
+        .tab-section.active-tab {
+            opacity: 1; visibility: visible; pointer-events: all; z-index: 5;
+        }
+        
+        .tab-content-pad { padding-top: 120px; padding-bottom: 0px; }
+        .container { width: 85%; max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+
+        /* --- 6. HOME TAB --- */
+        .hero-screen {
+            height: 100vh; width: 100%; position: relative;
+            display: flex; align-items: center;
+        }
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1920&auto=format&fit=crop') center/cover;
+            filter: brightness(0.4) contrast(1.1); z-index: 0;
+            background-attachment: fixed;
+        }
+        .hero-content { padding-left: 5vw; z-index: 2; position: relative; }
+        .hero-title {
+            font-size: 6.5vw; line-height: 1.1; color: #fff;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%); mix-blend-mode: overlay;
+        }
+        .hero-title span { display: block; transform: translateY(100%); opacity: 0; }
+        .hero-sub {
+            font-size: 1.3rem; margin: 30px 0 50px; max-width: 550px;
+            color: #ccc; opacity: 0; transform: translateY(20px); font-weight: 200;
+        }
+
+        .teaser-section { padding: 100px 0; border-bottom: 1px solid #111; }
+        .teaser-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .teaser-img { height: 400px; width: 100%; object-fit: cover; filter: grayscale(100%); transition: 0.5s; }
+        .teaser-section:hover .teaser-img { filter: grayscale(0%); }
+        .teaser-title { font-size: 2.5rem; margin-bottom: 20px; color: #fff; }
+        .teaser-desc { color: var(--text-muted); margin-bottom: 30px; line-height: 1.7; font-size: 1.1rem; }
+
+        .btn {
+            padding: 16px 45px; border: 1px solid var(--gold); color: var(--gold);
+            text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem;
+            position: relative; overflow: hidden; transition: 0.4s; display: inline-block;
+            font-weight: 600; width: fit-content;
+        }
+        .btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--gold); transition: 0.4s; z-index: -1;
+        }
+        .btn:hover { color: #000; }
+        .btn:hover::before { left: 0; }
+
+        /* --- 7. STUDIO (ABOUT) --- */
+        .section-header { margin-bottom: 60px; }
+        .section-subtitle { color: var(--gold); letter-spacing: 3px; font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 15px; }
+        .section-title { font-size: 3.5rem; color: #fff; line-height: 1.2; }
+
+        .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 80px; align-items: start; margin-bottom: 100px; }
+        .about-text p { font-size: 1.1rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 30px; }
+        .about-img-wrap { width: 100%; height: 600px; overflow: hidden; position: relative; }
+        .about-img-wrap img { transition: transform 1s; filter: grayscale(20%); }
+        .about-img-wrap:hover img { transform: scale(1.05); filter: grayscale(0%); }
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; border-top: 1px solid #222; padding-top: 50px; }
+        .stat-item h3 { font-size: 3rem; color: var(--gold); margin-bottom: 5px; }
+        .stat-item p { color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- 8. EXPERTISE (SERVICES) --- */
+        .dna-list { display: flex; gap: 50px; margin-bottom: 60px; border-bottom: 1px solid #222; padding-bottom: 30px; flex-wrap: wrap; }
+        .dna-item { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .dna-item span { color: var(--gold); margin-right: 10px; }
+
+        .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding-bottom: 80px; }
+        .service-card { position: relative; height: 400px; overflow: hidden; border: 1px solid #222; display: block; }
+        .service-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; filter: brightness(0.3) grayscale(100%); transition: 0.6s; }
+        .service-content { position: relative; z-index: 2; height: 100%; padding: 40px; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(to top, #000, transparent); }
+        .service-card:hover .service-bg { filter: brightness(0.6) grayscale(0%); transform: scale(1.1); }
+        .service-title { font-size: 2rem; color: #fff; margin-bottom: 10px; transform: translateY(10px); transition: 0.4s; }
+        .service-desc { color: #ccc; font-size: 1rem; opacity: 0.8; transform: translateY(10px); transition: 0.4s; line-height: 1.6; }
+        .service-card:hover .service-title { color: var(--gold); transform: translateY(0); }
+        .service-card:hover .service-desc { transform: translateY(0); opacity: 1; }
+
+        /* --- 9. PORTFOLIO --- */
+        .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; padding-bottom: 100px; }
+        .project-item { position: relative; height: 450px; overflow: hidden; display: block; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .p-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+        .project-item:hover .p-img { transform: scale(1.1); }
+        .project-item:hover { border-bottom-color: var(--gold); }
+        .p-info { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); transform: translateY(20px); opacity: 0; transition: 0.4s; }
+        .project-item:hover .p-info { transform: translateY(0); opacity: 1; }
+        .p-title { font-size: 1.4rem; color: #fff; margin-bottom: 5px; font-family: 'Playfair Display'; }
+        .p-loc { font-size: 0.8rem; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- 10. SHARED FOOTER --- */
+        .shared-footer { padding: 100px 0 50px; background: #080808; border-top: 1px solid #1a1a1a; text-align: center; }
+        .footer-big-title { font-size: 4vw; color: #fff; font-family: 'Playfair Display'; margin-bottom: 50px; line-height: 1.1; }
+        .footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 900px; margin: 0 auto 60px; text-align: left; }
+        .f-col h5 { color: var(--gold); margin-bottom: 15px; letter-spacing: 2px; font-size: 0.85rem; }
+        .f-col p, .f-col a { color: #888; font-size: 1rem; line-height: 1.6; display: block; transition: 0.3s; }
+        .f-col a:hover { color: #fff; }
+        .copyright { font-size: 0.8rem; color: #333; margin-top: 40px; }
+
+        /* --- CONTACT TAB --- */
+        .contact-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; }
+
+        /* --- RESPONSIVE OPTIMIZATION --- */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container { width: 90%; }
+            .hero-title { font-size: 8vw; }
+            .about-grid { grid-template-columns: 1fr; gap: 40px; }
+            .about-img-wrap { height: 450px; }
+            .project-grid { grid-template-columns: repeat(2, 1fr); } 
+            .stats-row { gap: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            body, a, button { cursor: auto; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+            header { padding: 20px; }
+            .nav-link { display: none; } 
+            .mobile-menu-toggle { display: flex; } 
+
+            .hero-title { font-size: 12vw; }
+            .hero-sub { font-size: 1rem; }
+            .section-title { font-size: 2.5rem; }
+            .footer-big-title { font-size: 10vw; }
+
+            .teaser-grid, .about-grid, .services-grid, .project-grid, .stats-row, .footer-grid { 
+                grid-template-columns: 1fr; gap: 40px; 
+            }
+
+            .hero-bg { background-attachment: scroll; } 
+            .teaser-section { padding: 60px 0; }
+            .teaser-img { height: 250px; order: -1; } 
+            .about-img-wrap { height: 300px; }
+            .service-card { height: 300px; }
+            .project-item { height: 350px; }
+            
+            .footer-grid { text-align: center; }
+            .f-col { margin-bottom: 20px; }
+            .tab-content-pad { padding-top: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CUSTOM CURSOR -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- PRELOADER -->
+    <div class="preloader">
+        <div class="loader-text">RIVAAN INTERIORS</div>
+        <div class="loader-line"></div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <a href="#" class="logo hover-target" onclick="switchTab('home')">RIVAAN.</a>
+        
+        <nav>
+            <a href="#" class="nav-link hover-target" onclick="switchTab('about')">Studio</a>
+            <a href="#" class="nav-link hover-target" onclick="switchTab('services')">Expertise</a>
+            <a href="#" class="nav-link hover-target" onclick="switchTab('projects')">Portfolio</a>
+            <a href="#" class="nav-link hover-target" onclick="switchTab('contact')">Contact</a>
+        </nav>
+
+        <div class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </header>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu-overlay" id="mobileMenu">
+        <a href="#" class="mobile-link" onclick="mobileLinkClick('home')">Home</a>
+        <a href="#" class="mobile-link" onclick="mobileLinkClick('about')">Studio</a>
+        <a href="#" class="mobile-link" onclick="mobileLinkClick('services')">Expertise</a>
+        <a href="#" class="mobile-link" onclick="mobileLinkClick('projects')">Portfolio</a>
+        <a href="#" class="mobile-link" onclick="mobileLinkClick('contact')">Contact</a>
+    </div>
+
+    <main>
+        
+        <!-- === TAB 1: HOME === -->
+        <section id="home" class="tab-section active-tab">
+            <div class="hero-screen">
+                <div class="hero-bg"></div>
+                <div class="container hero-content">
+                    <h1 class="hero-title">
+                        <span>Calm Luxury.</span>
+                        <span style="color: var(--gold);">Future Living.</span>
+                    </h1>
+                    <p class="hero-sub">Defining the aesthetics of modern Mumbai. We craft bespoke residential and commercial spaces that blend high-end luxury with functional timelessness.</p>
+                    <button class="btn hover-target" onclick="switchTab('projects')">Explore Work</button>
+                    <div style="position:absolute; bottom:30px; left:5vw; color:#888; font-size:0.8rem; letter-spacing:2px; animation: bounce 2s infinite;">SCROLL DOWN &darr;</div>
+                </div>
+            </div>
+
+            <div class="container teaser-section">
+                <div class="teaser-grid">
+                    <div class="teaser-content">
+                        <span class="section-subtitle">01 / THE STUDIO</span>
+                        <h2 class="teaser-title">Design rooted in Soul.</h2>
+                        <p class="teaser-desc">We move beyond trends. By combining architectural precision with an artistic selection of textures, we create environments that feel personal and profoundly sophisticated.</p>
+                        <button class="btn hover-target" onclick="switchTab('about')">Read Philosophy</button>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800" class="teaser-img hover-target" alt="Studio Teaser">
+                </div>
+            </div>
+
+            <div class="container teaser-section">
+                <div class="teaser-grid">
+                    <img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=800" class="teaser-img hover-target" alt="Services Teaser">
+                    <div class="teaser-content">
+                        <span class="section-subtitle">02 / EXPERTISE</span>
+                        <h2 class="teaser-title">Bespoke Execution.</h2>
+                        <p class="teaser-desc">From Luxury Residences in Bandra to Corporate HQs in BKC. Our turnkey solutions cover everything from concept to the final styling.</p>
+                        <button class="btn hover-target" onclick="switchTab('services')">View Services</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container teaser-section" style="border-bottom: none;">
+                <div class="teaser-grid">
+                    <div class="teaser-content">
+                        <span class="section-subtitle">03 / FEATURED WORK</span>
+                        <h2 class="teaser-title">The Oberoi Sky.</h2>
+                        <p class="teaser-desc">A 4,000 sq.ft penthouse in Worli designed with a minimalist "Noir" palette, featuring Italian marble and brass accents.</p>
+                        <button class="btn hover-target" onclick="switchTab('projects')">View Portfolio</button>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800" class="teaser-img hover-target" alt="Project Teaser">
+                </div>
+            </div>
+
+            <div class="shared-footer">
+                <div class="container">
+                    <h2 class="footer-big-title">Let's create something<br>timeless.</h2>
+                    <div class="footer-grid">
+                        <div class="f-col">
+                            <h5>VISIT US</h5>
+                            <p>Mumbai, Maharashtra</p>
+                        </div>
+                        <div class="f-col">
+                            <h5>CONTACT</h5>
+                            <p>+91 98213 13487</p>
+                            <a href="mailto:hello@rivaaninteriors.com" class="hover-target">hello@rivaaninteriors.com</a>
+                        </div>
+                        <div class="f-col">
+                            <h5>FOLLOW</h5>
+                            <a href="https://www.instagram.com/rivaan.interiors/" target="_blank" class="hover-target">Instagram</a>
+                        </div>
+                    </div>
+                    <a href="https://wa.link/0fc560" target="_blank" class="btn hover-target">Book Consultation</a>
+                    <p class="copyright">&copy; 2025 Rivaan Interiors.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- === TAB 2: STUDIO === -->
+        <section id="about" class="tab-section">
+            <div class="container tab-content-pad">
+                <div class="section-header">
+                    <span class="section-subtitle">The Studio</span>
+                    <h2 class="section-title">Design rooted in <br>Mumbai's soul.</h2>
+                </div>
+                <div class="about-grid">
+                    <div class="about-text">
+                        <h3 style="color: #fff; font-size: 1.8rem; margin-bottom: 20px;">The Philosophy</h3>
+                        <p>Rivaan Interiors is more than a design firm; it is a curation of lifestyle. Based in the heart of Mumbai, we understand the city's chaotic energy and the deep desire for a sanctuary. Our philosophy, <strong>"Calm Luxury,"</strong> focuses on creating spaces that decompress, inspire, and endure.</p>
+                        <p>We move beyond trends. By combining architectural precision with an artistic selection of textures—marble, velvet, brass, and wood—we create environments that feel personal and profoundly sophisticated.</p>
+                    </div>
+                    <div class="about-img-wrap hover-target">
+                        <img src="https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?q=80&w=1200" alt="Design Materials">
+                    </div>
+                </div>
+                <div class="stats-row" style="margin-bottom: 80px;">
+                    <div class="stat-item"><h3>10+</h3><p>Years of Excellence</p></div>
+                    <div class="stat-item"><h3>50+</h3><p>Luxury Residences</p></div>
+                    <div class="stat-item"><h3>100%</h3><p>Bespoke Execution</p></div>
+                </div>
+            </div>
+            <div class="shared-footer">
+                <div class="container">
+                    <h2 class="footer-big-title">Ready to start?</h2>
+                    <div class="footer-grid">
+                        <div class="f-col"><h5>VISIT US</h5><p>Mumbai, Maharashtra</p></div>
+                        <div class="f-col"><h5>CONTACT</h5><p>+91 98213 13487</p></div>
+                        <div class="f-col"><h5>SOCIAL</h5><a href="https://www.instagram.com/rivaan.interiors/" target="_blank">Instagram</a></div>
+                    </div>
+                    <a href="https://wa.link/0fc560" target="_blank" class="btn hover-target">Book Consultation</a>
+                    <p class="copyright">&copy; 2025 Rivaan Interiors.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- === TAB 3: EXPERTISE === -->
+        <section id="services" class="tab-section">
+            <div class="container tab-content-pad">
+                <div class="section-header">
+                    <span class="section-subtitle">What We Do</span>
+                    <h2 class="section-title">Comprehensive <br>Design Solutions.</h2>
+                </div>
+                <div class="dna-list">
+                    <div class="dna-item"><span>01</span> Space Planning</div>
+                    <div class="dna-item"><span>02</span> 3D Visualization</div>
+                    <div class="dna-item"><span>03</span> Material Sourcing</div>
+                    <div class="dna-item"><span>04</span> Project Management</div>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card hover-target">
+                        <div class="service-bg"><img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800" alt="Residential"></div>
+                        <div class="service-content"><h3 class="service-title">Residential Interiors</h3><p class="service-desc">From sea-facing penthouses in Juhu to expansive villas. We craft homes that are an extension of your persona.</p></div>
+                    </div>
+                    <div class="service-card hover-target">
+                        <div class="service-bg"><img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=800" alt="Commercial"></div>
+                        <div class="service-content"><h3 class="service-title">Commercial Spaces</h3><p class="service-desc">Strategic design for corporate HQs and boutique offices. Spaces that elevate brand identity and productivity.</p></div>
+                    </div>
+                    <div class="service-card hover-target">
+                        <div class="service-bg"><img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800" alt="Turnkey"></div>
+                        <div class="service-content"><h3 class="service-title">Turnkey Solutions</h3><p class="service-desc">We handle the chaos; you enjoy the result. Complete end-to-end execution including civil, electrical, and styling.</p></div>
+                    </div>
+                    <div class="service-card hover-target">
+                        <div class="service-bg"><img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800" alt="Furniture"></div>
+                        <div class="service-content"><h3 class="service-title">Bespoke Furniture</h3><p class="service-desc">Custom-designed sofas, consoles, and lighting tailored to fit your specific dimensions and aesthetic.</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="shared-footer">
+                <div class="container">
+                    <h2 class="footer-big-title">Build your vision.</h2>
+                    <div class="footer-grid">
+                        <div class="f-col"><h5>VISIT US</h5><p>Mumbai, Maharashtra</p></div>
+                        <div class="f-col"><h5>CONTACT</h5><p>+91 98213 13487</p></div>
+                        <div class="f-col"><h5>SOCIAL</h5><a href="https://www.instagram.com/rivaan.interiors/" target="_blank">Instagram</a></div>
+                    </div>
+                    <a href="https://wa.link/0fc560" target="_blank" class="btn hover-target">Book Consultation</a>
+                    <p class="copyright">&copy; 2025 Rivaan Interiors.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- === TAB 4: PORTFOLIO === -->
+        <section id="projects" class="tab-section">
+            <div class="container tab-content-pad">
+                <div class="section-header">
+                    <span class="section-subtitle">Selected Works</span>
+                    <h2 class="section-title">Curated Spaces.</h2>
+                </div>
+                <div class="project-grid">
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800" class="p-img" alt="Luxury Living">
+                        <div class="p-info"><h3 class="p-title">The Oberoi Sky</h3><span class="p-loc">Worli • Residential</span></div>
+                    </a>
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1616594039964-40891a913161?q=80&w=800" class="p-img" alt="Master Bedroom">
+                        <div class="p-info"><h3 class="p-title">Lodha World One</h3><span class="p-loc">Lower Parel • Residential</span></div>
+                    </a>
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800" class="p-img" alt="Dining Area">
+                        <div class="p-info"><h3 class="p-title">Sea Mist Penthouse</h3><span class="p-loc">Juhu • Residential</span></div>
+                    </a>
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800" class="p-img" alt="Office Lounge">
+                        <div class="p-info"><h3 class="p-title">Fintech HQ</h3><span class="p-loc">BKC • Commercial</span></div>
+                    </a>
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1512918760383-5658b512916b?q=80&w=800" class="p-img" alt="Minimal Apartment">
+                        <div class="p-info"><h3 class="p-title">Minimalist Villa</h3><span class="p-loc">Alibaug • Vacation Home</span></div>
+                    </a>
+                    <a href="#" class="project-item hover-target">
+                        <img src="https://images.unsplash.com/photo-1600210491892-db9d4aa02555?q=80&w=800" class="p-img" alt="Dark Interior">
+                        <div class="p-info"><h3 class="p-title">Noir Apartment</h3><span class="p-loc">Bandra • Residential</span></div>
+                    </a>
+                </div>
+            </div>
+            <div class="shared-footer">
+                <div class="container">
+                    <h2 class="footer-big-title">Your space next.</h2>
+                    <div class="footer-grid">
+                        <div class="f-col"><h5>VISIT US</h5><p>Mumbai, Maharashtra</p></div>
+                        <div class="f-col"><h5>CONTACT</h5><p>+91 98213 13487</p></div>
+                        <div class="f-col"><h5>SOCIAL</h5><a href="https://www.instagram.com/rivaan.interiors/" target="_blank">Instagram</a></div>
+                    </div>
+                    <a href="https://wa.link/0fc560" target="_blank" class="btn hover-target">Book Consultation</a>
+                    <p class="copyright">&copy; 2025 Rivaan Interiors.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- === TAB 5: CONTACT === -->
+        <section id="contact" class="tab-section">
+            <div class="container contact-wrap">
+                <h1 class="footer-big-title" style="margin-bottom: 60px;">Let's create something<br>timeless.</h1>
+                <div class="footer-grid">
+                    <div class="f-col">
+                        <h5>VISIT US</h5>
+                        <p>Mumbai, Maharashtra</p>
+                    </div>
+                    <div class="f-col">
+                        <h5>CONTACT</h5>
+                        <p>+91 98213 13487</p>
+                        <a href="mailto:hello@rivaaninteriors.com" class="hover-target">hello@rivaaninteriors.com</a>
+                    </div>
+                    <div class="f-col">
+                        <h5>FOLLOW</h5>
+                        <a href="https://www.instagram.com/rivaan.interiors/" target="_blank" class="hover-target">Instagram</a>
+                    </div>
+                </div>
+                <a href="https://wa.link/0fc560" target="_blank" class="btn hover-target">Book Consultation</a>
+                <p class="copyright">&copy; 2025 Rivaan Interiors.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOGIC -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        /* --- CURSOR --- */
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        
+        if (window.matchMedia("(pointer: fine)").matches) {
+            gsap.set(cursorDot, {xPercent: -50, yPercent: -50});
+            gsap.set(cursorOutline, {xPercent: -50, yPercent: -50});
+
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(cursorDot, { duration: 0.1, x: e.clientX, y: e.clientY });
+                gsap.to(cursorOutline, { duration: 0.5, x: e.clientX, y: e.clientY, ease: "power2.out" });
+            });
+
+            document.body.addEventListener('mouseover', (e) => {
+                if (e.target.closest('.hover-target')) {
+                    document.body.classList.add('hovering');
+                } else {
+                    document.body.classList.remove('hovering');
+                }
+            });
+        }
+
+        /* --- PRELOADER --- */
+        const tl = gsap.timeline();
+        gsap.set("body", { visibility: "visible" });
+
+        tl.to(".loader-line", { width: "100%", duration: 1.2, ease: "power2.inOut" })
+          .to(".loader-text", { y: -50, opacity: 0, duration: 0.5 })
+          .to(".preloader", { yPercent: -100, duration: 1, ease: "expo.inOut" })
+          .to("body", { opacity: 1, duration: 0.1 }, "-=1") 
+          .from(".hero-title span", { yPercent: 100, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out" }, "-=0.5")
+          .to(".hero-sub", { y: 0, opacity: 1, duration: 1 }, "-=0.5");
+
+
+        /* --- TAB SWITCHING ENGINE --- */
+        let currentTab = 'home';
+        let isAnimating = false;
+
+        function switchTab(tabId) {
+            if (currentTab === tabId || isAnimating) return;
+            isAnimating = true;
+
+            const currentSection = document.getElementById(currentTab);
+            const nextSection = document.getElementById(tabId);
+            
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`.nav-link[onclick="switchTab('${tabId}')"]`);
+            if(activeLink) activeLink.classList.add('active');
+
+            gsap.to(currentSection, {
+                opacity: 0,
+                scale: 0.98,
+                filter: "blur(5px)",
+                duration: 0.5,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    currentSection.classList.remove('active-tab');
+                    currentSection.style.visibility = "hidden";
+                    currentSection.scrollTop = 0; 
+                    
+                    nextSection.classList.add('active-tab');
+                    gsap.set(nextSection, { opacity: 0, scale: 1.02, filter: "blur(10px)", visibility: "visible" });
+
+                    gsap.to(nextSection, {
+                        opacity: 1,
+                        scale: 1,
+                        filter: "blur(0px)",
+                        duration: 0.6,
+                        ease: "power2.out",
+                        onComplete: () => {
+                            currentTab = tabId;
+                            isAnimating = false;
+                            ScrollTrigger.refresh();
+                        }
+                    });
+                }
+            });
+        }
+
+        /* --- KEYBOARD SCROLLING --- */
+        document.addEventListener('keydown', (e) => {
+            const activeTab = document.querySelector('.tab-section.active-tab');
+            if (!activeTab) return;
+
+            const scrollAmount = 100; // Pixels per key press
+
+            if (e.key === 'ArrowDown') {
+                activeTab.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp') {
+                activeTab.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+            }
+        });
+
+        /* --- MOBILE MENU --- */
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('open');
+        }
+
+        function mobileLinkClick(tabId) {
+            toggleMobileMenu();
+            switchTab(tabId);
+        }
+        
+        /* --- ANIMATIONS --- */
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+                40% {transform: translateY(-10px);}
+                60% {transform: translateY(-5px);}
+            }
+        `;
+        document.head.appendChild(styleSheet);
+        
+        gsap.utils.toArray('.teaser-section').forEach(section => {
+            gsap.from(section, {
+                scrollTrigger: {
+                    trigger: section,
+                    scroller: "#home",
+                    start: "top 80%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 50,
+                opacity: 0,
+                duration: 0.8
+            });
+        });
+
+    </script>
+</body>
+</html>
