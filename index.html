@@ -8,21 +8,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <style>
-:root{--primary:#ffcc00;--cyan:#00f3ff;--purple:#bc13fe;--bg:#050505;--text:#fff;--glass:rgba(10,10,20,0.85);--border:rgba(255,204,0,0.3);}
+:root{--primary:#ffcc00;--cyan:#00f3ff;--purple:#bc13fe;--bg:#050505;--text:#fff;--glass:rgba(10,10,20,0.85);--border:rgba(255,204,0,0.3);--alert:#ff0044;}
 *{margin:0;padding:0;box-sizing:border-box;cursor:none;}
 @media(max-width:768px){*{cursor:auto;}}
 body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;}
 h1,h2,h3,h4{font-family:'Orbitron',sans-serif;text-transform:uppercase;}
-
-#scroll-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--cyan),var(--purple));width:0%;z-index:10000;}
+#scroll-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--cyan),var(--purple));width:0%;z-index:10000;transition:width 0.1s;}
 #morph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:radial-gradient(circle at center,#0e0e14 0%,#000 100%);}
 #cursor{position:fixed;top:0;left:0;width:10px;height:10px;background:#fff;border:1px solid var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 15px var(--cyan);mix-blend-mode:difference;}
-#cursor-ring{position:fixed;top:0;left:0;width:36px;height:36px;border:1px solid rgba(0,243,255,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
-
-/* GAZE DOT */
-#gaze-dot{position:fixed;width:16px;height:16px;border-radius:50%;background:rgba(0,243,255,0.25);border:1px solid var(--cyan);pointer-events:none;z-index:9996;transform:translate(-50%,-50%);box-shadow:0 0 20px var(--cyan);display:none;transition:left 0.08s,top 0.08s;}
-#eye-status{position:fixed;top:12px;right:20px;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:var(--cyan);letter-spacing:2px;z-index:9997;opacity:0;transition:opacity 0.5s;}
-
+#cursor-ring{position:fixed;top:0;left:0;width:36px;height:36px;border:1px solid rgba(0,243,255,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s;}
 #intro-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.97);z-index:11000;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(15px);}
 .intro-content{background:#0a0a0a;border:2px solid var(--cyan);padding:30px;text-align:center;max-width:580px;width:90%;border-radius:12px;box-shadow:0 0 50px rgba(0,243,255,0.15);}
 .intro-title{color:var(--primary);font-size:1.8rem;margin-bottom:6px;letter-spacing:2px;}
@@ -32,22 +26,17 @@ h1,h2,h3,h4{font-family:'Orbitron',sans-serif;text-transform:uppercase;}
 .gesture-icon{font-size:1.5rem;min-width:28px;text-align:center;}
 .gesture-text strong{display:block;color:var(--primary);font-size:0.85rem;}
 .gesture-text span{font-size:0.75rem;color:#bbb;}
-.eye-badge{grid-column:span 2;display:flex;align-items:center;gap:10px;background:rgba(0,243,255,0.06);padding:10px;border-radius:8px;border:1px solid rgba(0,243,255,0.3);justify-content:center;}
-.eye-badge strong{color:var(--cyan);font-size:0.85rem;}
-.eye-badge span{font-size:0.75rem;color:#bbb;}
 .enter-btn{background:rgba(0,243,255,0.08);color:#fff;border:2px solid var(--cyan);padding:14px 0;width:100%;font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;border-radius:6px;text-transform:uppercase;animation:pulse-glow 1.5s infinite alternate;transition:0.3s;margin-top:10px;}
 .enter-btn:hover{background:var(--cyan);color:#000;}
 @keyframes pulse-glow{0%{box-shadow:0 0 10px var(--cyan);}100%{box-shadow:0 0 30px var(--cyan),0 0 15px var(--purple);}}
-
 .container{max-width:1100px;margin:0 auto;padding:20px;perspective:1000px;}
-header{display:flex;justify-content:space-between;align-items:flex-start;padding:30px 0;border-bottom:1px solid var(--border);}
+header{display:flex;justify-content:space-between;align-items:flex-start;padding:30px 0;border-bottom:1px solid var(--border);backdrop-filter:blur(5px);}
 .brand h1{font-size:2.2rem;background:linear-gradient(90deg,var(--primary),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;line-height:1;}
 .brand-sub{font-size:0.85rem;color:#fff;letter-spacing:1px;margin-top:5px;opacity:0.85;}
 .brand-sub b{color:var(--purple);font-family:'Orbitron';}
 .header-socials{display:flex;gap:18px;}
 .social-link{color:var(--text);font-size:1.4rem;transition:0.3s;}
 .social-link:hover{color:var(--cyan);transform:scale(1.15);text-shadow:0 0 10px var(--cyan);}
-
 .hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 0;position:relative;}
 .tagline-top{color:var(--cyan);font-size:0.9rem;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;opacity:0;}
 .hero-title{font-size:4.5rem;margin-bottom:10px;background:linear-gradient(45deg,var(--primary),var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;}
@@ -67,22 +56,20 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
 .cta-primary{background:var(--primary);color:#000;border:2px solid var(--primary);}
 .cta-primary:hover{background:transparent;color:var(--primary);box-shadow:0 0 20px var(--primary);}
 .cta-secondary{background:transparent;color:var(--cyan);border:2px solid var(--cyan);}
-.cta-secondary:hover{background:var(--cyan);color:#000;}
-.scroll-indicator{position:absolute;bottom:40px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0.5;}
+.cta-secondary:hover{background:var(--cyan);color:#000;box-shadow:0 0 20px var(--cyan);}
+.scroll-indicator{position:absolute;bottom:40px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0.6;}
 .scroll-indicator span{font-size:0.7rem;letter-spacing:3px;color:#666;}
 .scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--cyan),transparent);animation:scroll-pulse 2s infinite;}
 @keyframes scroll-pulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
-
 .reveal{opacity:0;transform:translateY(40px);transition:opacity 0.7s ease,transform 0.7s ease;}
 .reveal.visible{opacity:1;transform:translateY(0);}
 .reveal-left{opacity:0;transform:translateX(-40px);transition:opacity 0.7s ease,transform 0.7s ease;}
 .reveal-left.visible{opacity:1;transform:translateX(0);}
 .reveal-right{opacity:0;transform:translateX(40px);transition:opacity 0.7s ease,transform 0.7s ease;}
 .reveal-right.visible{opacity:1;transform:translateX(0);}
-
 .section-title{font-size:1.8rem;color:var(--primary);border-bottom:1px solid var(--border);display:inline-block;padding-bottom:10px;margin-bottom:40px;position:relative;}
 .section-title::after{content:'';position:absolute;bottom:-1px;left:0;width:60px;height:2px;background:var(--cyan);}
-.story-band{background:var(--glass);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:50px 0;margin:60px 0;text-align:center;}
+.story-band{background:var(--glass);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:50px 0;margin:60px 0;text-align:center;backdrop-filter:blur(10px);}
 .story-band p{font-size:1.4rem;line-height:1.8;max-width:800px;margin:0 auto;color:#ddd;}
 .story-band span{color:var(--primary);font-weight:700;}
 .grid-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:25px;margin:0 0 60px;}
@@ -121,13 +108,15 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
 .webcam-container{position:fixed;bottom:20px;right:20px;width:150px;height:112px;border:2px solid var(--cyan);border-radius:10px;overflow:hidden;z-index:9000;opacity:0.8;box-shadow:0 0 20px var(--cyan);}
 .webcam-container video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
 .gesture-status{position:absolute;bottom:0;left:0;width:100%;background:rgba(0,0,0,0.8);color:var(--cyan);font-size:10px;text-align:center;padding:2px;letter-spacing:1px;}
-#ai-helper{position:fixed;top:0;left:0;padding:10px 16px;background:rgba(0,0,0,0.9);border:1px solid var(--cyan);color:var(--cyan);font-size:12px;border-radius:0 18px 18px 18px;pointer-events:none;z-index:9997;opacity:0;max-width:220px;}
+#ai-helper{position:fixed;top:0;left:0;padding:10px 16px;background:rgba(0,0,0,0.9);border:1px solid var(--cyan);color:var(--cyan);font-size:12px;border-radius:0 18px 18px 18px;pointer-events:none;z-index:9997;opacity:0;max-width:220px;backdrop-filter:blur(5px);}
 .typing-cursor{display:inline-block;width:3px;height:1em;background:var(--cyan);margin-left:4px;vertical-align:middle;animation:blink 0.8s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 @media(max-width:768px){
-  #cursor,#cursor-ring,#ai-helper,#gaze-dot,#eye-status{display:none!important;}
-  .brand h1{font-size:1.5rem;}.hero-title{font-size:2.8rem;}
-  .hero-stats{gap:20px;}.stat-num{font-size:1.5rem;}
+  #cursor,#cursor-ring,#ai-helper{display:none!important;}
+  .brand h1{font-size:1.5rem;}
+  .hero-title{font-size:2.8rem;}
+  .hero-stats{gap:20px;}
+  .stat-num{font-size:1.5rem;}
   .webcam-container{width:100px;height:75px;}
   .footer-cta h2{font-size:1.8rem;}
 }
@@ -140,10 +129,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
 <div id="cursor"></div>
 <div id="cursor-ring"></div>
 <div id="ai-helper"></div>
-<div id="gaze-dot"></div>
-<div id="eye-status">👁 EYE TRACKING ACTIVE</div>
 
-<!-- INTRO -->
 <div id="intro-modal">
   <div class="intro-content">
     <h2 class="intro-title">SYSTEM INITIATED</h2>
@@ -151,18 +137,21 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
     <div class="gesture-grid">
       <div class="gesture-item"><div class="gesture-icon">☝️</div><div class="gesture-text"><strong>Index Up</strong><span>Scroll Up</span></div></div>
       <div class="gesture-item"><div class="gesture-icon">✌️</div><div class="gesture-text"><strong>Two Up</strong><span>Scroll Down</span></div></div>
-      <div class="gesture-item"><div class="gesture-icon">👍</div><div class="gesture-text"><strong>Thumbs Up</strong><span>Enter Site</span></div></div>
-      <div class="gesture-item"><div class="gesture-icon">👁️</div><div class="gesture-text"><strong>Eye Gaze</strong><span>Attracts Particles</span></div></div>
-      <div class="eye-badge"><div class="gesture-icon">📷</div><div class="gesture-text"><strong>Camera Required</strong><span>Allow access for gesture + eye tracking</span></div></div>
+      <div class="gesture-item" style="grid-column:span 2;justify-content:center;border-color:var(--cyan);">
+        <div class="gesture-icon">👍</div>
+        <div class="gesture-text"><strong>Thumbs Up</strong><span>Enter Site</span></div>
+      </div>
+    </div>
+    <div style="background:rgba(0,243,255,0.08);border-left:3px solid var(--cyan);padding:12px 15px;text-align:left;margin-bottom:15px;font-size:0.82rem;color:#ccc;line-height:1.6;">
+      Please allow camera access when prompted for gesture controls.
     </div>
     <button class="enter-btn" onclick="closeIntro()">I UNDERSTAND — ENTER SITE</button>
   </div>
 </div>
 
-<!-- WEBCAM -->
 <div class="webcam-container">
   <video id="input_video" playsinline muted autoplay></video>
-  <div class="gesture-status" id="gesture-text">INITIALIZING...</div>
+  <div class="gesture-status" id="gesture-text">SYSTEM ACTIVE</div>
 </div>
 
 <div class="container">
@@ -237,7 +226,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
         <div class="timeline-dot"></div>
         <div class="timeline-date">2025 — PRESENT</div>
         <div class="timeline-card" data-ai="eSynergies">
-          <h4>Performance Marketer</h4><small>eSynergies Services</small>
+          <h4>Performance Marketer</h4>
+          <small>eSynergies Services</small>
           <p>Managed campaigns across 10+ industries. Boosted conversions 40–60% via precision audience targeting.</p>
           <a href="https://drive.google.com/drive/folders/1aCmzo28yx5dNH_YtAmTYb5-UGpA6ndNm?usp=drive_link" target="_blank" class="pill" style="margin-top:12px;border-color:var(--cyan);color:var(--cyan);"><i class="fas fa-folder-open"></i> Campaign Data</a>
         </div>
@@ -246,7 +236,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
         <div class="timeline-dot" style="border-color:var(--purple);box-shadow:0 0 10px var(--purple);"></div>
         <div class="timeline-date">2024 — 2025</div>
         <div class="timeline-card" data-ai="Omved">
-          <h4>Marketing Asst. Manager</h4><small>Omved Therapies</small>
+          <h4>Marketing Asst. Manager</h4>
+          <small>Omved Therapies</small>
           <p>Handled Amazon, Flipkart & Shopify ads. Ran full-funnel Meta + Google campaigns end-to-end.</p>
           <a href="https://drive.google.com/drive/folders/1iovEOvxBq7v1WmpXhzkUVKVFuirN6fR1?usp=drive_link" target="_blank" class="pill" style="margin-top:12px;border-color:var(--purple);color:var(--purple);"><i class="fas fa-briefcase"></i> Brand Management</a>
         </div>
@@ -255,7 +246,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
         <div class="timeline-dot" style="border-color:var(--primary);box-shadow:0 0 10px var(--primary);"></div>
         <div class="timeline-date">2023 — 2024</div>
         <div class="timeline-card" data-ai="Zen Entertainment">
-          <h4>Digital Marketing Executive</h4><small>Zen Entertainment</small>
+          <h4>Digital Marketing Executive</h4>
+          <small>Zen Entertainment</small>
           <p>Developed SEO-driven content strategies and social media campaigns to grow audience reach.</p>
           <a href="https://www.instagram.com/gravityzoneofficial/" target="_blank" class="pill" style="margin-top:12px;border-color:var(--primary);color:var(--primary);"><i class="fab fa-instagram"></i> Social Media</a>
         </div>
@@ -298,88 +290,44 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
   </div>
 </div>
 
-<!-- MEDIAPIPE -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-
 <script>
-// ===================== INTRO =====================
+// ---- INTRO ----
 function closeIntro(){
   const m=document.getElementById('intro-modal');
   gsap.to(m,{opacity:0,duration:0.8,onComplete:()=>{m.style.display='none';startHeroAnim();}});
 }
 
-// ===================== SCROLL BAR =====================
+// ---- SCROLL PROGRESS ----
 window.addEventListener('scroll',()=>{
-  const p=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
-  document.getElementById('scroll-bar').style.width=p+'%';
+  const pct=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+  document.getElementById('scroll-bar').style.width=pct+'%';
 });
 
-// ===================== CANVAS SETUP =====================
+// ---- CANVAS ----
 const canvas=document.getElementById('morph-canvas');
 const ctx=canvas.getContext('2d');
 let W,H,particles=[];
 const isMobile=window.innerWidth<768;
 const NUM=isMobile?2000:5500;
-const COLORS=['#ffcc00','#00f3ff','#bc13fe'];
+const COLORS=["#ffcc00","#00f3ff","#bc13fe"];
 let curColor=COLORS[0];
 
-// Gaze state — global so Particle.update can read it
-let gazeX=0,gazeY=0,smoothGazeX=0,smoothGazeY=0,eyeActive=false;
-
-function resize(){
-  W=canvas.width=window.innerWidth;
-  H=canvas.height=window.innerHeight;
-  gazeX=smoothGazeX=W/2;
-  gazeY=smoothGazeY=H/2;
-  initParticles();
-  defineShapes();
-}
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;initParticles();defineShapes();}
 window.addEventListener('resize',resize);
 
-// ===================== PARTICLE =====================
 class Particle{
-  constructor(){
-    this.x=Math.random()*W; this.y=Math.random()*H;
-    this.tx=this.x; this.ty=this.y;
-    this.size=Math.random()*1.5+0.4;
-    this.isActive=false; this.alpha=0.7;
-    this.color=Math.random()>0.8?COLORS[Math.floor(Math.random()*COLORS.length)]:null;
-  }
-  update(mx,my){
-    // Smooth gaze
-    smoothGazeX+=(gazeX-smoothGazeX)*0.06;
-    smoothGazeY+=(gazeY-smoothGazeY)*0.06;
-
-    const ease=this.isActive?0.1:0.04;
-    this.x+=(this.tx-this.x)*ease;
-    this.y+=(this.ty-this.y)*ease;
-
-    // Mouse repel
-    const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy),r=isMobile?100:180;
-    if(d<r){const pull=(r-d)/r;this.x+=dx*pull*0.04;this.y+=dy*pull*0.04;}
-
-    // Eye gaze attract
-    if(eyeActive){
-      const gx=smoothGazeX-this.x,gy=smoothGazeY-this.y;
-      const gd=Math.sqrt(gx*gx+gy*gy);
-      const gr=Math.min(W,H)*0.35;
-      if(gd<gr){const s=(1-gd/gr)*0.012;this.x+=gx*s;this.y+=gy*s;}
-    }
-  }
-  draw(){
-    ctx.fillStyle=this.color||curColor;
-    ctx.globalAlpha=this.alpha;
-    ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();
-  }
+  constructor(){this.x=Math.random()*W;this.y=Math.random()*H;this.tx=this.x;this.ty=this.y;this.size=Math.random()*1.5+0.4;this.isActive=false;this.alpha=0.7;this.color=Math.random()>0.8?COLORS[Math.floor(Math.random()*COLORS.length)]:null;}
+  update(mx,my){const ease=this.isActive?0.1:0.04;this.x+=(this.tx-this.x)*ease;this.y+=(this.ty-this.y)*ease;const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy),r=isMobile?100:180;if(d<r){const pull=(r-d)/r;this.x+=dx*pull*0.04;this.y+=dy*pull*0.04;}}
+  draw(){ctx.fillStyle=this.color||curColor;ctx.globalAlpha=this.alpha;ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();}
 }
 
 function initParticles(){particles=[];for(let i=0;i<NUM;i++)particles.push(new Particle());}
 function scanCanvas(tc){const d=tc.getImageData(0,0,W,H).data,pts=[];for(let y=0;y<H;y+=3)for(let x=0;x<W;x+=3)if(d[((y*W+x)*4)+3]>128)pts.push({x,y});return pts;}
-function textPoints(t,fs){const tc=document.createElement('canvas');const tx=tc.getContext('2d');tc.width=W;tc.height=H;tx.font='900 '+fs+'px Arial';tx.fillStyle='white';tx.textAlign='center';tx.textBaseline='middle';tx.fillText(t,W/2,H/2);return scanCanvas(tc);}
+function textPoints(text,fs){const tc=document.createElement('canvas');const tCtx=tc.getContext('2d');tc.width=W;tc.height=H;tCtx.font="900 "+fs+"px Arial";tCtx.fillStyle='white';tCtx.textAlign='center';tCtx.textBaseline='middle';tCtx.fillText(text,W/2,H/2);return scanCanvas(tCtx);}
 
-// ===================== SOLAR SYSTEM =====================
+// ---- SOLAR SYSTEM ----
 const planets=[
   {orbitR:0,angle:0,speed:0,size:6,color:'#ffcc00'},
   {orbitR:55,angle:0,speed:0.020,size:2.5,color:'#aaaaaa',trail:[]},
@@ -390,14 +338,25 @@ const planets=[
   {orbitR:222,angle:1.8,speed:0.003,size:5.5,color:'#bc13fe',trail:[]},
 ];
 
-// ===================== GALAXY =====================
+// ---- GALAXY ----
 let gStars=[];
 function initGalaxy(){
   gStars=[];
   for(let i=0;i<250;i++){
-    const arm=Math.floor(Math.random()*3),t=Math.random()*3.5+0.6;
-    const ba=(arm*Math.PI*2/3)+t*0.75,sp=Math.random()*0.5-0.25,r=t*28+Math.random()*14;
-    gStars.push({ox:Math.cos(ba+sp)*r,oy:Math.sin(ba+sp)*r*0.42,size:Math.random()*1.3+0.3,alpha:Math.random()*0.55+0.2,color:Math.random()>0.55?'#bc13fe':Math.random()>0.5?'#00f3ff':'#fff',ts:Math.random()*0.03+0.005,to:Math.random()*Math.PI*2});
+    const arm=Math.floor(Math.random()*3);
+    const t=Math.random()*3.5+0.6;
+    const baseAngle=(arm*Math.PI*2/3)+t*0.75;
+    const spread=Math.random()*0.5-0.25;
+    const r=t*28+Math.random()*14;
+    gStars.push({
+      ox:Math.cos(baseAngle+spread)*r,
+      oy:Math.sin(baseAngle+spread)*r*0.42,
+      size:Math.random()*1.3+0.3,
+      alpha:Math.random()*0.55+0.2,
+      color:Math.random()>0.55?'#bc13fe':Math.random()>0.5?'#00f3ff':'#ffffff',
+      ts:Math.random()*0.03+0.005,
+      to:Math.random()*Math.PI*2,
+    });
   }
 }
 
@@ -429,9 +388,14 @@ function drawSolarSystem(){
   planets.forEach((p,i)=>{
     if(!i)return;
     p.angle+=p.speed;
-    const px=sx+Math.cos(p.angle)*p.orbitR,py=sy+Math.sin(p.angle)*p.orbitR*0.42;
-    p.trail.push({x:px,y:py});if(p.trail.length>28)p.trail.shift();
-    p.trail.forEach((tr,ti)=>{ctx.globalAlpha=0.15*(ti/p.trail.length);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(tr.x,tr.y,p.size*0.45,0,Math.PI*2);ctx.fill();});
+    const px=sx+Math.cos(p.angle)*p.orbitR;
+    const py=sy+Math.sin(p.angle)*p.orbitR*0.42;
+    p.trail.push({x:px,y:py});
+    if(p.trail.length>28)p.trail.shift();
+    p.trail.forEach((tr,ti)=>{
+      ctx.globalAlpha=0.15*(ti/p.trail.length);ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(tr.x,tr.y,p.size*0.45,0,Math.PI*2);ctx.fill();
+    });
     ctx.globalAlpha=0.45;
     const pg=ctx.createRadialGradient(px,py,0,px,py,p.size*2.8);
     pg.addColorStop(0,p.color+'cc');pg.addColorStop(1,p.color+'00');
@@ -445,7 +409,7 @@ function drawSolarSystem(){
 let shapes=[],shapeIdx=0,lastShapeT=0,mX=-1000,mY=-1000;
 function defineShapes(){
   const fs=Math.min(W,H);
-  shapes=[textPoints('SWITCH RABBIT',fs*0.13),textPoints('STRATEGY',fs*0.14),textPoints('CONVERT',fs*0.13)];
+  shapes=[textPoints("SWITCH RABBIT",fs*0.13),textPoints("STRATEGY",fs*0.14),textPoints("CONVERT",fs*0.13)];
   initGalaxy();
 }
 
@@ -464,12 +428,13 @@ function animate(){
   ctx.globalAlpha=1;
   requestAnimationFrame(animate);
 }
+
 setTimeout(()=>{resize();animate();},400);
 
 window.addEventListener('mousemove',e=>{mX=e.clientX;mY=e.clientY;});
 window.addEventListener('touchmove',e=>{if(e.touches.length>0){mX=e.touches[0].clientX;mY=e.touches[0].clientY;}},{passive:true});
 
-// ===================== CURSOR =====================
+// ---- CURSOR ----
 const cursor=document.getElementById('cursor');
 const ring=document.getElementById('cursor-ring');
 const aiHelper=document.getElementById('ai-helper');
@@ -480,12 +445,12 @@ if(!isMobile){
     gsap.to(aiHelper,{x:e.clientX+22,y:e.clientY+22,duration:0.2});
   });
   document.querySelectorAll('[data-ai]').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{aiHelper.innerText='▶ '+el.getAttribute('data-ai');aiHelper.style.opacity=1;gsap.to(ring,{width:60,height:60,duration:0.2});});
+    el.addEventListener('mouseenter',()=>{aiHelper.innerText="▶ "+el.getAttribute('data-ai');aiHelper.style.opacity=1;gsap.to(ring,{width:60,height:60,duration:0.2});});
     el.addEventListener('mouseleave',()=>{aiHelper.style.opacity=0;gsap.to(ring,{width:36,height:36,duration:0.2});});
   });
 }
 
-// ===================== TILT =====================
+// ---- TILT ----
 document.querySelectorAll('.tilt-card').forEach(card=>{
   if(isMobile)return;
   card.addEventListener('mousemove',e=>{
@@ -495,26 +460,27 @@ document.querySelectorAll('.tilt-card').forEach(card=>{
   card.addEventListener('mouseleave',()=>gsap.to(card,{rotationY:0,rotationX:0,duration:0.5}));
 });
 
-// ===================== HERO ANIM =====================
+// ---- HERO ANIM ----
 function startHeroAnim(){
   gsap.timeline()
-    .to('#hero-tagline',{opacity:1,duration:0.6,ease:'power2.out'})
-    .to('#hero-title',{opacity:1,duration:0.8,ease:'power2.out'},'-=0.2')
-    .to('#hero-sub',{opacity:1,duration:0.6,ease:'power2.out'},'-=0.4')
-    .to('#hero-stats',{opacity:1,duration:0.6,ease:'power2.out'},'-=0.3')
-    .to('#hero-cta',{opacity:1,duration:0.6,ease:'power2.out'},'-=0.2');
+    .to('#hero-tagline',{opacity:1,y:0,duration:0.6,ease:'power2.out'})
+    .to('#hero-title',{opacity:1,y:0,duration:0.8,ease:'power2.out'},'-=0.2')
+    .to('#hero-sub',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.4')
+    .to('#hero-stats',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.3')
+    .to('#hero-cta',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.2');
   setTimeout(()=>startCountUp('.stat-num'),800);
 }
 
+// ---- COUNT UP ----
 function startCountUp(sel){
   document.querySelectorAll(sel).forEach(el=>{
     const target=+el.dataset.target,suffix=el.dataset.suffix||'';
     let cur=0;const step=Math.max(1,Math.floor(target/40));
-    const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur+(cur===target?suffix:'');if(cur>=target)clearInterval(t);},40);
+    const timer=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur+(cur===target?suffix:'');if(cur>=target)clearInterval(timer);},40);
   });
 }
 
-// ===================== INTERSECTION OBSERVER =====================
+// ---- INTERSECTION OBSERVER ----
 const obs=new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -525,90 +491,25 @@ const obs=new IntersectionObserver(entries=>{
 },{threshold:0.15,rootMargin:'0px 0px -50px 0px'});
 document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
 
-// ===================== TRACKING (HANDS + EYES) =====================
+// ---- GESTURE ----
 const videoEl=document.getElementById('input_video');
 const gestureText=document.getElementById('gesture-text');
-const gazeDot=document.getElementById('gaze-dot');
-const eyeStatus=document.getElementById('eye-status');
-
-async function initTracking(){
-  // --- HANDS ---
-  const hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+try{
+  const hands=new Hands({locateFile:f=>"https://cdn.jsdelivr.net/npm/@mediapipe/hands/"+f});
   hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.7});
   hands.onResults(res=>{
-    if(!res.multiHandLandmarks||!res.multiHandLandmarks.length){
-      gestureText.innerText=eyeActive?'👁 EYE MODE':'ACTIVE';return;
-    }
+    if(!res.multiHandLandmarks||!res.multiHandLandmarks.length)return;
     const lm=res.multiHandLandmarks[0];
-    const idxUp=lm[8].y<lm[6].y,midUp=lm[12].y<lm[10].y,thumbUp=lm[4].y<lm[3].y-0.05;
+    const indexUp=lm[8].y<lm[6].y,middleUp=lm[12].y<lm[10].y,thumbUp=lm[4].y<lm[3].y-0.05;
     const intro=document.getElementById('intro-modal');
     if(intro&&intro.style.display!=='none'){if(thumbUp)closeIntro();return;}
-    if(idxUp&&!midUp){window.scrollBy(0,-20);gestureText.innerText='↑ SCROLL UP';}
-    else if(idxUp&&midUp){window.scrollBy(0,20);gestureText.innerText='↓ SCROLL DOWN';}
+    if(indexUp&&!middleUp){window.scrollBy(0,-20);gestureText.innerText='↑ SCROLL UP';}
+    else if(indexUp&&middleUp){window.scrollBy(0,20);gestureText.innerText='↓ SCROLL DOWN';}
     else gestureText.innerText='✋ ACTIVE';
   });
-  await hands.initialize();
-
-  // --- FACE MESH (iris) ---
-  const faceMesh=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-  faceMesh.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
-  faceMesh.onResults(res=>{
-    if(!res.multiFaceLandmarks||!res.multiFaceLandmarks.length)return;
-    const lm=res.multiFaceLandmarks[0];
-    const li=lm[468],ri=lm[473];
-    if(!li||!ri)return;
-
-    // Raw gaze mapped to screen (mirror X)
-    gazeX=(1-(li.x+ri.x)/2)*W;
-    gazeY=((li.y+ri.y)/2)*H;
-    eyeActive=true;
-    eyeStatus.style.opacity=1;
-    gestureText.innerText='👁 EYE TRACKED';
-
-    // Smooth gaze for cursor (heavier smoothing so cursor feels stable)
-    smoothGazeX+=(gazeX-smoothGazeX)*0.12;
-    smoothGazeY+=(gazeY-smoothGazeY)*0.12;
-
-    // Move CURSOR + RING to gaze position (overrides mouse)
-    gsap.to(cursor,{x:smoothGazeX,y:smoothGazeY,duration:0.08});
-    gsap.to(ring,{x:smoothGazeX,y:smoothGazeY,duration:0.2});
-
-    // Move gaze dot (subtle secondary indicator behind cursor)
-    gazeDot.style.display='block';
-    gazeDot.style.left=smoothGazeX+'px';
-    gazeDot.style.top=smoothGazeY+'px';
-
-    // Also trigger data-ai tooltip based on gaze position
-    const el=document.elementFromPoint(smoothGazeX,smoothGazeY);
-    const aiTarget=el&&el.closest('[data-ai]');
-    if(aiTarget){
-      aiHelper.innerText='▶ '+aiTarget.getAttribute('data-ai');
-      aiHelper.style.opacity=1;
-      gsap.to(aiHelper,{x:smoothGazeX+22,y:smoothGazeY+22,duration:0.2});
-      gsap.to(ring,{width:60,height:60,duration:0.2});
-    } else {
-      aiHelper.style.opacity=0;
-      gsap.to(ring,{width:36,height:36,duration:0.2});
-    }
-  });
-  await faceMesh.initialize();
-
-  // --- SHARED CAMERA ---
-  const cam=new Camera(videoEl,{
-    onFrame:async()=>{
-      await hands.send({image:videoEl});
-      await faceMesh.send({image:videoEl});
-    },
-    width:320,height:240
-  });
+  const cam=new Camera(videoEl,{onFrame:async()=>await hands.send({image:videoEl}),width:320,height:240});
   cam.start();
-  gestureText.innerText='SYSTEM ACTIVE';
-}
-
-initTracking().catch(e=>{
-  console.warn('Tracking failed:',e);
-  gestureText.innerText='NO CAMERA';
-});
+}catch(e){console.log('Gesture unavailable');}
 </script>
 </body>
 </html>
