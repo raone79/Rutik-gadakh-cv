@@ -17,6 +17,14 @@ h1,h2,h3,h4{font-family:'Orbitron',sans-serif;text-transform:uppercase;}
 #morph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:radial-gradient(circle at center,#0e0e14 0%,#000 100%);}
 #cursor{position:fixed;top:0;left:0;width:10px;height:10px;background:#fff;border:1px solid var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 15px var(--cyan);mix-blend-mode:difference;}
 #cursor-ring{position:fixed;top:0;left:0;width:36px;height:36px;border:1px solid rgba(0,243,255,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s;}
+
+/* Eye tracking mode cursor ring (distinct look) */
+#cursor-ring.eye-mode{border:2px solid rgba(188,19,254,0.8);box-shadow:0 0 10px rgba(188,19,254,0.4);animation:eye-pulse 1.5s infinite;}
+@keyframes eye-pulse{0%,100%{box-shadow:0 0 6px rgba(188,19,254,0.4);}50%{box-shadow:0 0 20px rgba(188,19,254,0.9),0 0 40px rgba(188,19,254,0.3);}}
+
+/* Eye icon that follows gaze cursor */
+#eye-dot{position:fixed;top:0;left:0;width:14px;height:14px;background:var(--purple);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 12px var(--purple);display:none;}
+
 #intro-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.97);z-index:11000;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(15px);}
 .intro-content{background:#0a0a0a;border:2px solid var(--cyan);padding:30px;text-align:center;max-width:580px;width:90%;border-radius:12px;box-shadow:0 0 50px rgba(0,243,255,0.15);}
 .intro-title{color:var(--primary);font-size:1.8rem;margin-bottom:6px;letter-spacing:2px;}
@@ -29,6 +37,136 @@ h1,h2,h3,h4{font-family:'Orbitron',sans-serif;text-transform:uppercase;}
 .enter-btn{background:rgba(0,243,255,0.08);color:#fff;border:2px solid var(--cyan);padding:14px 0;width:100%;font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;border-radius:6px;text-transform:uppercase;animation:pulse-glow 1.5s infinite alternate;transition:0.3s;margin-top:10px;}
 .enter-btn:hover{background:var(--cyan);color:#000;}
 @keyframes pulse-glow{0%{box-shadow:0 0 10px var(--cyan);}100%{box-shadow:0 0 30px var(--cyan),0 0 15px var(--purple);}}
+
+/* ============================================================
+   EYE TRACKING UI
+   ============================================================ */
+
+/* Mode switcher panel */
+#mode-panel{
+  position:fixed;bottom:20px;right:180px;
+  display:flex;gap:8px;align-items:center;
+  z-index:9002;
+}
+.mode-btn{
+  background:rgba(0,0,0,0.85);
+  border:1px solid rgba(255,255,255,0.15);
+  color:#666;
+  padding:7px 12px;
+  border-radius:6px;
+  font-family:'Orbitron',sans-serif;
+  font-size:9px;
+  cursor:pointer;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  transition:0.25s;
+  backdrop-filter:blur(8px);
+}
+.mode-btn.active-mouse{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,243,255,0.3);}
+.mode-btn.active-eye{border-color:var(--purple);color:var(--purple);box-shadow:0 0 10px rgba(188,19,254,0.35);}
+.mode-btn:hover{border-color:#fff;color:#fff;}
+
+/* Calibration full-screen overlay */
+#cal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.94);
+  z-index:13000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+#cal-overlay.active{display:flex;}
+#cal-info{
+  text-align:center;pointer-events:none;
+}
+#cal-info h3{
+  font-family:'Orbitron',sans-serif;
+  color:var(--purple);
+  font-size:1rem;
+  letter-spacing:2px;
+  margin-bottom:10px;
+}
+#cal-info p{
+  color:#aaa;font-size:0.85rem;line-height:1.6;
+}
+#cal-step-txt{
+  color:var(--cyan);font-size:0.75rem;
+  letter-spacing:2px;margin-top:8px;
+  font-family:'Orbitron',sans-serif;
+}
+
+/* The dot to look at */
+#cal-dot{
+  position:fixed;
+  width:28px;height:28px;
+  pointer-events:none;
+  z-index:13001;
+  transform:translate(-50%,-50%);
+  transition:left 0.6s cubic-bezier(.25,.8,.25,1),top 0.6s cubic-bezier(.25,.8,.25,1);
+}
+#cal-dot-inner{
+  width:100%;height:100%;
+  border-radius:50%;
+  background:var(--purple);
+  box-shadow:0 0 20px var(--purple),0 0 40px rgba(188,19,254,0.4);
+  animation:dot-pop 0.4s ease;
+}
+@keyframes dot-pop{0%{transform:scale(0);}60%{transform:scale(1.3);}100%{transform:scale(1);}}
+
+/* SVG ring progress around dot */
+#cal-dot-svg{
+  position:fixed;
+  width:50px;height:50px;
+  z-index:13001;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  transition:left 0.6s cubic-bezier(.25,.8,.25,1),top 0.6s cubic-bezier(.25,.8,.25,1);
+}
+#cal-ring-progress{
+  stroke-dasharray:126;
+  stroke-dashoffset:126;
+  transition:stroke-dashoffset 0.1s linear;
+}
+
+/* Eye status pill (bottom of webcam) */
+#eye-status{
+  position:fixed;bottom:145px;right:20px;
+  background:rgba(0,0,0,0.85);
+  border:1px solid var(--purple);
+  color:var(--purple);
+  font-family:'Orbitron',sans-serif;
+  font-size:9px;
+  padding:4px 10px;
+  border-radius:0 0 6px 6px;
+  z-index:9002;
+  letter-spacing:1px;
+  display:none;
+  text-transform:uppercase;
+}
+#eye-status.on{display:block;}
+#eye-status.calibrated{border-color:var(--cyan);color:var(--cyan);}
+
+/* Recalibrate mini button */
+#recal-btn{
+  position:fixed;bottom:20px;right:338px;
+  background:rgba(0,0,0,0.85);
+  border:1px solid rgba(188,19,254,0.4);
+  color:rgba(188,19,254,0.6);
+  padding:7px 10px;
+  border-radius:6px;
+  font-family:'Orbitron',sans-serif;
+  font-size:8px;
+  cursor:pointer;
+  letter-spacing:1px;
+  z-index:9003;
+  text-transform:uppercase;
+  display:none;
+  transition:0.25s;
+}
+#recal-btn:hover{border-color:var(--purple);color:var(--purple);}
+
+/* ============================================================ */
+
 .container{max-width:1100px;margin:0 auto;padding:20px;perspective:1000px;}
 header{display:flex;justify-content:space-between;align-items:flex-start;padding:30px 0;border-bottom:1px solid var(--border);backdrop-filter:blur(5px);}
 .brand h1{font-size:2.2rem;background:linear-gradient(90deg,var(--primary),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;line-height:1;}
@@ -112,7 +250,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
 .typing-cursor{display:inline-block;width:3px;height:1em;background:var(--cyan);margin-left:4px;vertical-align:middle;animation:blink 0.8s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 @media(max-width:768px){
-  #cursor,#cursor-ring,#ai-helper{display:none!important;}
+  #cursor,#cursor-ring,#ai-helper,#mode-panel,#recal-btn,#eye-status{display:none!important;}
   .brand h1{font-size:1.5rem;}
   .hero-title{font-size:2.8rem;}
   .hero-stats{gap:20px;}
@@ -128,7 +266,38 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
 <canvas id="morph-canvas"></canvas>
 <div id="cursor"></div>
 <div id="cursor-ring"></div>
+<div id="eye-dot"></div>
 <div id="ai-helper"></div>
+
+<!-- ── EYE TRACKING UI ───────────────────────────────────────── -->
+<div id="eye-status">👁 EYE ACTIVE</div>
+
+<!-- Mode toggle panel -->
+<div id="mode-panel">
+  <button class="mode-btn active-mouse" id="btn-mouse" onclick="setMode('mouse')">🖱 MOUSE</button>
+  <button class="mode-btn" id="btn-eye" onclick="setMode('eye')">👁 EYE TRACK</button>
+</div>
+
+<!-- Recalibrate button (shown only when eye mode active) -->
+<button id="recal-btn" onclick="startCalibration()">⊕ RECALIBRATE</button>
+
+<!-- Calibration overlay -->
+<div id="cal-overlay">
+  <div id="cal-info">
+    <h3>EYE CALIBRATION</h3>
+    <p>Look directly at the <span style="color:var(--purple)">purple dot</span> as it moves.<br>Hold your gaze until the ring fills completely.</p>
+    <p id="cal-step-txt">POINT 1 / 5</p>
+  </div>
+</div>
+<!-- The calibration dot (outside overlay so it can be positioned freely) -->
+<div id="cal-dot"><div id="cal-dot-inner"></div></div>
+<svg id="cal-dot-svg" viewBox="0 0 50 50">
+  <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(188,19,254,0.2)" stroke-width="2"/>
+  <circle id="cal-ring-progress" cx="25" cy="25" r="20" fill="none"
+    stroke="#bc13fe" stroke-width="2.5" stroke-linecap="round"
+    transform="rotate(-90 25 25)"/>
+</svg>
+<!-- ─────────────────────────────────────────────────────────── -->
 
 <div id="intro-modal">
   <div class="intro-content">
@@ -137,13 +306,14 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
     <div class="gesture-grid">
       <div class="gesture-item"><div class="gesture-icon">☝️</div><div class="gesture-text"><strong>Index Up</strong><span>Scroll Up</span></div></div>
       <div class="gesture-item"><div class="gesture-icon">✌️</div><div class="gesture-text"><strong>Two Up</strong><span>Scroll Down</span></div></div>
-      <div class="gesture-item" style="grid-column:span 2;justify-content:center;border-color:var(--cyan);">
+      <div class="gesture-item"><div class="gesture-icon">👁️</div><div class="gesture-text"><strong>Eye Track</strong><span>Control Cursor</span></div></div>
+      <div class="gesture-item" style="border-color:var(--cyan);">
         <div class="gesture-icon">👍</div>
         <div class="gesture-text"><strong>Thumbs Up</strong><span>Enter Site</span></div>
       </div>
     </div>
     <div style="background:rgba(0,243,255,0.08);border-left:3px solid var(--cyan);padding:12px 15px;text-align:left;margin-bottom:15px;font-size:0.82rem;color:#ccc;line-height:1.6;">
-      Please allow camera access when prompted for gesture controls.
+      Allow camera access for gesture & eye tracking. After entering, click <b style="color:var(--purple)">👁 EYE TRACK</b> button to begin calibration.
     </div>
     <button class="enter-btn" onclick="closeIntro()">I UNDERSTAND — ENTER SITE</button>
   </div>
@@ -263,7 +433,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
       <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view" target="_blank" class="pill brand-pill">Space Interior</a>
       <a href="https://drive.google.com/file/d/1u9ayYQe9aYPHbJAaFCqA4Dlg8qiTrZ8s/view" target="_blank" class="pill brand-pill">Pure Energy</a>
       <a href="https://drive.google.com/file/d/1uaX-gqjaJXM8gtFxd5mLfD-MGSIOqCKJ/view" target="_blank" class="pill brand-pill">Prettislim</a>
-      <a href="https://drive.google.com/file/d/1zBByF3AYnLfnNmA-8d-Jf_85zivTyGoP/view" target="_blank" class="pill brand-pill">Parshva</a>
+      <a href="https://drive.google.com/file/d/1zBByF3AYnNmA-8d-Jf_85zivTyGoP/view" target="_blank" class="pill brand-pill">Parshva</a>
       <a href="https://drive.google.com/file/d/1LfYwl_lMS2GjkP-gPP7uKSZtPp7xOGTk/view" target="_blank" class="pill brand-pill">Trustbiz</a>
       <a href="https://drive.google.com/file/d/1LfYwl_lMS2GjkP-gPP7uKSZtPp7xOGTk/view" target="_blank" class="pill brand-pill">Agi Healthcare</a>
       <a href="https://drive.google.com/file/d/1V8Vo2bU8a5F4DvsU65SkzwxmMhWae8kz/view" target="_blank" class="pill brand-pill">Marfo Strategies</a>
@@ -290,42 +460,51 @@ header{display:flex;justify-content:space-between;align-items:flex-start;padding
   </div>
 </div>
 
+<!-- MediaPipe: Camera Utils, Hands, FaceMesh -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
 <script>
+// ============================================================
+//  UTILITY
+// ============================================================
+const isMobile = window.innerWidth < 768;
+
 // ---- INTRO ----
 function closeIntro(){
-  const m=document.getElementById('intro-modal');
-  gsap.to(m,{opacity:0,duration:0.8,onComplete:()=>{m.style.display='none';startHeroAnim();}});
+  const m = document.getElementById('intro-modal');
+  gsap.to(m, {opacity:0, duration:0.8, onComplete:()=>{m.style.display='none'; startHeroAnim();}});
 }
 
 // ---- SCROLL PROGRESS ----
-window.addEventListener('scroll',()=>{
-  const pct=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
-  document.getElementById('scroll-bar').style.width=pct+'%';
+window.addEventListener('scroll', ()=>{
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  document.getElementById('scroll-bar').style.width = pct + '%';
 });
 
-// ---- CANVAS ----
-const canvas=document.getElementById('morph-canvas');
-const ctx=canvas.getContext('2d');
-let W,H,particles=[];
-const isMobile=window.innerWidth<768;
-const NUM=isMobile?2000:5500;
-const COLORS=["#ffcc00","#00f3ff","#bc13fe"];
-let curColor=COLORS[0];
+// ============================================================
+//  CANVAS / PARTICLE SYSTEM
+// ============================================================
+const canvas = document.getElementById('morph-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+const NUM = isMobile ? 2000 : 5500;
+const COLORS = ["#ffcc00","#00f3ff","#bc13fe"];
+let curColor = COLORS[0];
 
-function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;initParticles();defineShapes();}
-window.addEventListener('resize',resize);
+function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; initParticles(); defineShapes(); }
+window.addEventListener('resize', resize);
 
-class Particle{
-  constructor(){this.x=Math.random()*W;this.y=Math.random()*H;this.tx=this.x;this.ty=this.y;this.size=Math.random()*1.5+0.4;this.isActive=false;this.alpha=0.7;this.color=Math.random()>0.8?COLORS[Math.floor(Math.random()*COLORS.length)]:null;}
-  update(mx,my){const ease=this.isActive?0.1:0.04;this.x+=(this.tx-this.x)*ease;this.y+=(this.ty-this.y)*ease;const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy),r=isMobile?100:180;if(d<r){const pull=(r-d)/r;this.x+=dx*pull*0.04;this.y+=dy*pull*0.04;}}
-  draw(){ctx.fillStyle=this.color||curColor;ctx.globalAlpha=this.alpha;ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();}
+class Particle {
+  constructor(){ this.x=Math.random()*W; this.y=Math.random()*H; this.tx=this.x; this.ty=this.y; this.size=Math.random()*1.5+0.4; this.isActive=false; this.alpha=0.7; this.color=Math.random()>0.8?COLORS[Math.floor(Math.random()*COLORS.length)]:null; }
+  update(mx,my){ const ease=this.isActive?0.1:0.04; this.x+=(this.tx-this.x)*ease; this.y+=(this.ty-this.y)*ease; const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy),r=isMobile?100:180; if(d<r){const pull=(r-d)/r; this.x+=dx*pull*0.04; this.y+=dy*pull*0.04;} }
+  draw(){ ctx.fillStyle=this.color||curColor; ctx.globalAlpha=this.alpha; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); }
 }
 
-function initParticles(){particles=[];for(let i=0;i<NUM;i++)particles.push(new Particle());}
-function scanCanvas(tc){const d=tc.getImageData(0,0,W,H).data,pts=[];for(let y=0;y<H;y+=3)for(let x=0;x<W;x+=3)if(d[((y*W+x)*4)+3]>128)pts.push({x,y});return pts;}
-function textPoints(text,fs){const tc=document.createElement('canvas');const tCtx=tc.getContext('2d');tc.width=W;tc.height=H;tCtx.font="900 "+fs+"px Arial";tCtx.fillStyle='white';tCtx.textAlign='center';tCtx.textBaseline='middle';tCtx.fillText(text,W/2,H/2);return scanCanvas(tCtx);}
+function initParticles(){ particles=[]; for(let i=0;i<NUM;i++) particles.push(new Particle()); }
+function scanCanvas(tc){ const d=tc.getImageData(0,0,W,H).data, pts=[]; for(let y=0;y<H;y+=3) for(let x=0;x<W;x+=3) if(d[((y*W+x)*4)+3]>128) pts.push({x,y}); return pts; }
+function textPoints(text,fs){ const tc=document.createElement('canvas'); const tCtx=tc.getContext('2d'); tc.width=W; tc.height=H; tCtx.font="900 "+fs+"px Arial"; tCtx.fillStyle='white'; tCtx.textAlign='center'; tCtx.textBaseline='middle'; tCtx.fillText(text,W/2,H/2); return scanCanvas(tCtx); }
 
 // ---- SOLAR SYSTEM ----
 const planets=[
@@ -339,7 +518,7 @@ const planets=[
 ];
 
 // ---- GALAXY ----
-let gStars=[];
+let gStars = [];
 function initGalaxy(){
   gStars=[];
   for(let i=0;i<250;i++){
@@ -348,68 +527,52 @@ function initGalaxy(){
     const baseAngle=(arm*Math.PI*2/3)+t*0.75;
     const spread=Math.random()*0.5-0.25;
     const r=t*28+Math.random()*14;
-    gStars.push({
-      ox:Math.cos(baseAngle+spread)*r,
-      oy:Math.sin(baseAngle+spread)*r*0.42,
-      size:Math.random()*1.3+0.3,
-      alpha:Math.random()*0.55+0.2,
-      color:Math.random()>0.55?'#bc13fe':Math.random()>0.5?'#00f3ff':'#ffffff',
-      ts:Math.random()*0.03+0.005,
-      to:Math.random()*Math.PI*2,
-    });
+    gStars.push({ox:Math.cos(baseAngle+spread)*r, oy:Math.sin(baseAngle+spread)*r*0.42, size:Math.random()*1.3+0.3, alpha:Math.random()*0.55+0.2, color:Math.random()>0.55?'#bc13fe':Math.random()>0.5?'#00f3ff':'#ffffff', ts:Math.random()*0.03+0.005, to:Math.random()*Math.PI*2});
   }
 }
 
 function drawGalaxy(t){
-  const gx=W*0.15,gy=H*0.5;
+  const gx=W*0.15, gy=H*0.5;
   const g=ctx.createRadialGradient(gx,gy,0,gx,gy,45);
-  g.addColorStop(0,'rgba(188,19,254,0.3)');g.addColorStop(0.5,'rgba(0,243,255,0.08)');g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.globalAlpha=1;ctx.beginPath();ctx.arc(gx,gy,45,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  g.addColorStop(0,'rgba(188,19,254,0.3)'); g.addColorStop(0.5,'rgba(0,243,255,0.08)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.globalAlpha=1; ctx.beginPath(); ctx.arc(gx,gy,45,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
   gStars.forEach(s=>{
     const tw=0.25+0.3*Math.sin(t*s.ts+s.to);
-    ctx.globalAlpha=s.alpha*tw;ctx.fillStyle=s.color;
-    ctx.beginPath();ctx.arc(gx+s.ox,gy+s.oy,s.size,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=s.alpha*tw; ctx.fillStyle=s.color;
+    ctx.beginPath(); ctx.arc(gx+s.ox,gy+s.oy,s.size,0,Math.PI*2); ctx.fill();
   });
   ctx.globalAlpha=1;
 }
 
 function drawSolarSystem(){
-  const sx=W*0.82,sy=H*0.5;
-  planets.forEach((p,i)=>{
-    if(!i)return;
-    ctx.globalAlpha=0.07;ctx.strokeStyle='#fff';ctx.lineWidth=0.8;
-    ctx.beginPath();ctx.ellipse(sx,sy,p.orbitR,p.orbitR*0.42,0,0,Math.PI*2);ctx.stroke();
-  });
+  const sx=W*0.82, sy=H*0.5;
+  planets.forEach((p,i)=>{ if(!i)return; ctx.globalAlpha=0.07; ctx.strokeStyle='#fff'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.ellipse(sx,sy,p.orbitR,p.orbitR*0.42,0,0,Math.PI*2); ctx.stroke(); });
   ctx.globalAlpha=1;
   const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,24);
-  sg.addColorStop(0,'rgba(255,204,0,0.9)');sg.addColorStop(1,'rgba(255,204,0,0)');
-  ctx.fillStyle=sg;ctx.beginPath();ctx.arc(sx,sy,24,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffdd44';ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.fill();
+  sg.addColorStop(0,'rgba(255,204,0,0.9)'); sg.addColorStop(1,'rgba(255,204,0,0)');
+  ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,24,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffdd44'; ctx.beginPath(); ctx.arc(sx,sy,6,0,Math.PI*2); ctx.fill();
   planets.forEach((p,i)=>{
     if(!i)return;
     p.angle+=p.speed;
-    const px=sx+Math.cos(p.angle)*p.orbitR;
-    const py=sy+Math.sin(p.angle)*p.orbitR*0.42;
+    const px=sx+Math.cos(p.angle)*p.orbitR, py=sy+Math.sin(p.angle)*p.orbitR*0.42;
     p.trail.push({x:px,y:py});
-    if(p.trail.length>28)p.trail.shift();
-    p.trail.forEach((tr,ti)=>{
-      ctx.globalAlpha=0.15*(ti/p.trail.length);ctx.fillStyle=p.color;
-      ctx.beginPath();ctx.arc(tr.x,tr.y,p.size*0.45,0,Math.PI*2);ctx.fill();
-    });
+    if(p.trail.length>28) p.trail.shift();
+    p.trail.forEach((tr,ti)=>{ ctx.globalAlpha=0.15*(ti/p.trail.length); ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(tr.x,tr.y,p.size*0.45,0,Math.PI*2); ctx.fill(); });
     ctx.globalAlpha=0.45;
     const pg=ctx.createRadialGradient(px,py,0,px,py,p.size*2.8);
-    pg.addColorStop(0,p.color+'cc');pg.addColorStop(1,p.color+'00');
-    ctx.fillStyle=pg;ctx.beginPath();ctx.arc(px,py,p.size*2.8,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(px,py,p.size,0,Math.PI*2);ctx.fill();
-    if(i===6){ctx.globalAlpha=0.65;ctx.strokeStyle='rgba(188,19,254,0.8)';ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(px,py,p.size*3,p.size,0.35,0,Math.PI*2);ctx.stroke();}
+    pg.addColorStop(0,p.color+'cc'); pg.addColorStop(1,p.color+'00');
+    ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(px,py,p.size*2.8,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(px,py,p.size,0,Math.PI*2); ctx.fill();
+    if(i===6){ ctx.globalAlpha=0.65; ctx.strokeStyle='rgba(188,19,254,0.8)'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.ellipse(px,py,p.size*3,p.size,0.35,0,Math.PI*2); ctx.stroke(); }
   });
   ctx.globalAlpha=1;
 }
 
-let shapes=[],shapeIdx=0,lastShapeT=0,mX=-1000,mY=-1000;
+let shapes=[], shapeIdx=0, lastShapeT=0, mX=-1000, mY=-1000;
 function defineShapes(){
   const fs=Math.min(W,H);
-  shapes=[textPoints("SWITCH RABBIT",fs*0.13),textPoints("STRATEGY",fs*0.14),textPoints("CONVERT",fs*0.13)];
+  shapes=[textPoints("SWITCH RABBIT",fs*0.13), textPoints("STRATEGY",fs*0.14), textPoints("CONVERT",fs*0.13)];
   initGalaxy();
 }
 
@@ -417,9 +580,9 @@ function animate(){
   ctx.clearRect(0,0,W,H);
   const now=Date.now();
   if(now-lastShapeT>20000){
-    shapeIdx=(shapeIdx+1)%shapes.length;lastShapeT=now;curColor=COLORS[shapeIdx%COLORS.length];
+    shapeIdx=(shapeIdx+1)%shapes.length; lastShapeT=now; curColor=COLORS[shapeIdx%COLORS.length];
     const sh=[...shapes[shapeIdx]].sort(()=>Math.random()-0.5);
-    particles.forEach((p,i)=>{if(i<sh.length){p.tx=sh[i].x;p.ty=sh[i].y;p.isActive=true;}else{p.tx=Math.random()*W;p.ty=Math.random()*H;p.isActive=false;}});
+    particles.forEach((p,i)=>{ if(i<sh.length){p.tx=sh[i].x;p.ty=sh[i].y;p.isActive=true;}else{p.tx=Math.random()*W;p.ty=Math.random()*H;p.isActive=false;} });
   }
   drawGalaxy(now*0.001);
   drawSolarSystem();
@@ -428,88 +591,411 @@ function animate(){
   ctx.globalAlpha=1;
   requestAnimationFrame(animate);
 }
+setTimeout(()=>{resize();animate();}, 400);
 
-setTimeout(()=>{resize();animate();},400);
+window.addEventListener('mousemove', e=>{
+  if(currentMode === 'mouse'){ mX=e.clientX; mY=e.clientY; }
+});
+window.addEventListener('touchmove', e=>{ if(e.touches.length>0){mX=e.touches[0].clientX;mY=e.touches[0].clientY;} },{passive:true});
 
-window.addEventListener('mousemove',e=>{mX=e.clientX;mY=e.clientY;});
-window.addEventListener('touchmove',e=>{if(e.touches.length>0){mX=e.touches[0].clientX;mY=e.touches[0].clientY;}},{passive:true});
+// ============================================================
+//  CURSOR
+// ============================================================
+const cursor    = document.getElementById('cursor');
+const ring      = document.getElementById('cursor-ring');
+const eyeDot    = document.getElementById('eye-dot');
+const aiHelper  = document.getElementById('ai-helper');
 
-// ---- CURSOR ----
-const cursor=document.getElementById('cursor');
-const ring=document.getElementById('cursor-ring');
-const aiHelper=document.getElementById('ai-helper');
 if(!isMobile){
-  window.addEventListener('mousemove',e=>{
-    gsap.to(cursor,{x:e.clientX,y:e.clientY,duration:0.08});
-    gsap.to(ring,{x:e.clientX,y:e.clientY,duration:0.25});
-    gsap.to(aiHelper,{x:e.clientX+22,y:e.clientY+22,duration:0.2});
+  window.addEventListener('mousemove', e=>{
+    if(currentMode !== 'mouse') return;
+    gsap.to(cursor,  {x:e.clientX, y:e.clientY, duration:0.08});
+    gsap.to(ring,    {x:e.clientX, y:e.clientY, duration:0.25});
+    gsap.to(aiHelper,{x:e.clientX+22, y:e.clientY+22, duration:0.2});
   });
   document.querySelectorAll('[data-ai]').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{aiHelper.innerText="▶ "+el.getAttribute('data-ai');aiHelper.style.opacity=1;gsap.to(ring,{width:60,height:60,duration:0.2});});
-    el.addEventListener('mouseleave',()=>{aiHelper.style.opacity=0;gsap.to(ring,{width:36,height:36,duration:0.2});});
+    el.addEventListener('mouseenter',()=>{ aiHelper.innerText="▶ "+el.getAttribute('data-ai'); aiHelper.style.opacity=1; gsap.to(ring,{width:60,height:60,duration:0.2}); });
+    el.addEventListener('mouseleave',()=>{ aiHelper.style.opacity=0; gsap.to(ring,{width:36,height:36,duration:0.2}); });
   });
 }
 
 // ---- TILT ----
 document.querySelectorAll('.tilt-card').forEach(card=>{
   if(isMobile)return;
-  card.addEventListener('mousemove',e=>{
-    const r=card.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;
+  card.addEventListener('mousemove', e=>{
+    const r=card.getBoundingClientRect(), x=e.clientX-r.left-r.width/2, y=e.clientY-r.top-r.height/2;
     gsap.to(card,{rotationY:x/18,rotationX:-y/18,transformPerspective:1000,duration:0.1});
   });
   card.addEventListener('mouseleave',()=>gsap.to(card,{rotationY:0,rotationX:0,duration:0.5}));
 });
 
-// ---- HERO ANIM ----
+// ============================================================
+//  MODE MANAGER  (mouse | eye)
+// ============================================================
+let currentMode = 'mouse';
+
+function setMode(mode){
+  currentMode = mode;
+  document.getElementById('btn-mouse').className = 'mode-btn' + (mode==='mouse'?' active-mouse':'');
+  document.getElementById('btn-eye').className   = 'mode-btn' + (mode==='eye'  ?' active-eye':'');
+
+  if(mode === 'eye'){
+    // Show eye status, hide normal cursor elements
+    cursor.style.display = 'none';
+    ring.classList.add('eye-mode');
+    eyeDot.style.display = 'block';
+    document.getElementById('eye-status').classList.add('on');
+
+    // Kick off calibration if not yet done
+    if(!eyeCalibrated){
+      startCalibration();
+    } else {
+      document.getElementById('recal-btn').style.display = 'block';
+    }
+  } else {
+    // Restore mouse cursor
+    cursor.style.display = 'block';
+    ring.classList.remove('eye-mode');
+    eyeDot.style.display = 'none';
+    document.getElementById('eye-status').classList.remove('on');
+    document.getElementById('recal-btn').style.display = 'none';
+    closeCalibration();
+  }
+}
+
+// ============================================================
+//  EYE TRACKING  —  MediaPipe FaceMesh + Iris landmarks
+// ============================================================
+
+/*
+  MediaPipe FaceMesh with refineLandmarks:true gives us:
+    lm[468]  = left iris center  (in normalised video coords)
+    lm[473]  = right iris center
+
+  Steps:
+  1. Calibration  — 5 points: TL, TR, Center, BL, BR
+     For each point collect 40 frames of iris data, average them.
+  2. After 5 points run a simple bilinear / affine least-squares fit:
+       screenX = ax*irisX + bx*irisY + cx
+       screenY = ay*irisX + by*irisY + cy
+  3. Per-frame: read iris → apply transform → smooth (EMA) → move cursor
+*/
+
+const EYE_SMOOTH = 0.12;   // EMA factor — lower = smoother / more lag
+
+// Calibration state
+let eyeCalibrated  = false;
+let calStep        = 0;
+let calFrames      = 0;
+let calSamples     = [];   // iris {x,y} samples for current point
+let calData        = [];   // [{screenX, screenY, irisX, irisY}]
+let calCoeffs      = null; // {ax,bx,cx,ay,by,cy}
+let calInProgress  = false;
+
+const CAL_FRAMES   = 45;   // frames to collect per calibration point
+const CAL_CIRC     = 2 * Math.PI * 20;  // svg ring circumference ≈ 126
+
+// 5 calibration points as fractions of screen [x, y]
+const CAL_POS = [
+  [0.10, 0.10],
+  [0.90, 0.10],
+  [0.50, 0.50],
+  [0.10, 0.90],
+  [0.90, 0.90],
+];
+
+// Eye cursor smooth position
+let eyeCX = window.innerWidth  / 2;
+let eyeCY = window.innerHeight / 2;
+
+// FaceMesh instance (lazy-init)
+let faceMesh = null;
+let faceMeshReady = false;
+
+function initFaceMesh(){
+  if(faceMesh) return;
+  try{
+    faceMesh = new FaceMesh({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+    });
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,      // ← iris landmarks
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    faceMesh.onResults(onFaceResults);
+    faceMeshReady = true;
+  }catch(e){
+    console.warn('FaceMesh init failed', e);
+  }
+}
+
+// Called every camera frame (from the shared Camera loop)
+async function processFaceMesh(videoEl){
+  if(!faceMeshReady || !faceMesh) return;
+  await faceMesh.send({image: videoEl});
+}
+
+function onFaceResults(results){
+  if(currentMode !== 'eye') return;
+  if(!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) return;
+
+  const lm = results.multiFaceLandmarks[0];
+  if(!lm[468] || !lm[473]) return;   // need iris landmarks
+
+  // Average left (468) and right (473) iris centres
+  // Mirror X because the video is CSS-mirrored (scaleX(-1))
+  const rawX = 1 - ((lm[468].x + lm[473].x) / 2);
+  const rawY =      (lm[468].y + lm[473].y) / 2;
+
+  // ── Calibration collection ──────────────────────────────
+  if(calInProgress && calStep < CAL_POS.length){
+    calSamples.push({x: rawX, y: rawY});
+    calFrames++;
+
+    // Update the SVG progress ring
+    const pct   = calFrames / CAL_FRAMES;
+    const offset = CAL_CIRC * (1 - pct);
+    document.getElementById('cal-ring-progress').style.strokeDashoffset = offset;
+
+    if(calFrames >= CAL_FRAMES){
+      // Average collected samples
+      const avgX = calSamples.reduce((s,p)=>s+p.x,0) / calSamples.length;
+      const avgY = calSamples.reduce((s,p)=>s+p.y,0) / calSamples.length;
+
+      calData.push({
+        screenX: CAL_POS[calStep][0] * window.innerWidth,
+        screenY: CAL_POS[calStep][1] * window.innerHeight,
+        irisX: avgX,
+        irisY: avgY
+      });
+
+      calSamples = [];
+      calFrames  = 0;
+      calStep++;
+
+      if(calStep >= CAL_POS.length){
+        // Done — compute transform
+        computeCalibration();
+        eyeCalibrated  = true;
+        calInProgress  = false;
+        closeCalibration();
+        // Show recalibrate button
+        document.getElementById('recal-btn').style.display = 'block';
+        const stat = document.getElementById('eye-status');
+        stat.textContent = '👁 EYE LOCKED';
+        stat.classList.add('calibrated');
+      } else {
+        // Next dot
+        moveDot(calStep);
+        document.getElementById('cal-step-txt').textContent =
+          `POINT ${calStep+1} / ${CAL_POS.length}`;
+        // Reset ring
+        document.getElementById('cal-ring-progress').style.strokeDashoffset = CAL_CIRC;
+      }
+    }
+    return;   // don't move cursor during calibration
+  }
+
+  // ── Gaze → screen mapping ────────────────────────────────
+  if(!eyeCalibrated || !calCoeffs) return;
+
+  const {ax,bx,cx,ay,by,cy} = calCoeffs;
+  const sx = ax*rawX + bx*rawY + cx;
+  const sy = ay*rawX + by*rawY + cy;
+
+  // Clamp to viewport
+  const clampX = Math.max(0, Math.min(window.innerWidth,  sx));
+  const clampY = Math.max(0, Math.min(window.innerHeight, sy));
+
+  // Exponential moving average for smoothness
+  eyeCX = eyeCX * (1 - EYE_SMOOTH) + clampX * EYE_SMOOTH;
+  eyeCY = eyeCY * (1 - EYE_SMOOTH) + clampY * EYE_SMOOTH;
+
+  // Move cursors
+  gsap.to(ring,   {x:eyeCX, y:eyeCY, duration:0.08});
+  gsap.to(eyeDot, {x:eyeCX, y:eyeCY, duration:0.05});
+  gsap.to(aiHelper,{x:eyeCX+22, y:eyeCY+22, duration:0.1});
+
+  // Feed particle system
+  mX = eyeCX; mY = eyeCY;
+}
+
+// ── Least-squares affine calibration fit ─────────────────────
+//   Solve: screen = A_iris * coeffs   (5 pts, 3 unknowns each axis)
+function computeCalibration(){
+  const n = calData.length;
+  // Build A matrix [irisX, irisY, 1] for each point
+  const A  = calData.map(p=>[p.irisX, p.irisY, 1]);
+  const bX = calData.map(p=>p.screenX);
+  const bY = calData.map(p=>p.screenY);
+
+  const [ax,bx,cx] = lstsq(A, bX);
+  const [ay,by,cy] = lstsq(A, bY);
+  calCoeffs = {ax, bx, cx, ay, by, cy};
+}
+
+// Normal-equations least squares solver (3 unknowns)
+function lstsq(A, b){
+  const m = A[0].length, n = A.length;
+  // AtA  (m×m)
+  const AtA = Array.from({length:m},()=>Array(m).fill(0));
+  const Atb = Array(m).fill(0);
+  for(let i=0;i<n;i++) for(let j=0;j<m;j++){
+    Atb[j] += A[i][j] * b[i];
+    for(let k=0;k<m;k++) AtA[j][k] += A[i][j] * A[i][k];
+  }
+  return solve3(AtA, Atb);
+}
+
+// Gaussian elimination for 3×3 system
+function solve3(A, b){
+  const M = A.map((r,i)=>[...r, b[i]]);
+  for(let i=0;i<3;i++){
+    let mx=i;
+    for(let k=i+1;k<3;k++) if(Math.abs(M[k][i])>Math.abs(M[mx][i])) mx=k;
+    [M[i],M[mx]]=[M[mx],M[i]];
+    for(let k=i+1;k<3;k++){
+      const f=M[k][i]/M[i][i];
+      for(let j=i;j<=3;j++) M[k][j]-=f*M[i][j];
+    }
+  }
+  const x=Array(3).fill(0);
+  for(let i=2;i>=0;i--){
+    x[i]=M[i][3]/M[i][i];
+    for(let k=i-1;k>=0;k--) M[k][3]-=M[k][i]*x[i];
+  }
+  return x;
+}
+
+// ── Calibration dot helpers ───────────────────────────────────
+function moveDot(stepIdx){
+  const [fx, fy] = CAL_POS[stepIdx];
+  const left = fx * window.innerWidth;
+  const top  = fy * window.innerHeight;
+  const dot    = document.getElementById('cal-dot');
+  const dotSvg = document.getElementById('cal-dot-svg');
+  dot.style.left    = left+'px';  dot.style.top    = top+'px';
+  dotSvg.style.left = left+'px';  dotSvg.style.top = top+'px';
+  // Re-animate the inner dot
+  const inner = document.getElementById('cal-dot-inner');
+  inner.style.animation='none';
+  requestAnimationFrame(()=>{ inner.style.animation='dot-pop 0.35s ease forwards'; });
+}
+
+function startCalibration(){
+  calStep       = 0;
+  calFrames     = 0;
+  calSamples    = [];
+  calData       = [];
+  calInProgress = true;
+  eyeCalibrated = false;
+  calCoeffs     = null;
+
+  // Reset ring
+  document.getElementById('cal-ring-progress').style.strokeDashoffset = CAL_CIRC;
+  document.getElementById('cal-step-txt').textContent = `POINT 1 / ${CAL_POS.length}`;
+
+  // Show overlay and first dot
+  document.getElementById('cal-overlay').classList.add('active');
+  moveDot(0);
+
+  // Init FaceMesh if needed
+  initFaceMesh();
+}
+
+function closeCalibration(){
+  document.getElementById('cal-overlay').classList.remove('active');
+}
+
+// ============================================================
+//  HERO ANIMATION
+// ============================================================
 function startHeroAnim(){
   gsap.timeline()
     .to('#hero-tagline',{opacity:1,y:0,duration:0.6,ease:'power2.out'})
-    .to('#hero-title',{opacity:1,y:0,duration:0.8,ease:'power2.out'},'-=0.2')
-    .to('#hero-sub',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.4')
-    .to('#hero-stats',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.3')
-    .to('#hero-cta',{opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.2');
-  setTimeout(()=>startCountUp('.stat-num'),800);
+    .to('#hero-title',  {opacity:1,y:0,duration:0.8,ease:'power2.out'},'-=0.2')
+    .to('#hero-sub',    {opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.4')
+    .to('#hero-stats',  {opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.3')
+    .to('#hero-cta',    {opacity:1,y:0,duration:0.6,ease:'power2.out'},'-=0.2');
+  setTimeout(()=>startCountUp('.stat-num'), 800);
 }
 
-// ---- COUNT UP ----
+// ============================================================
+//  COUNT-UP
+// ============================================================
 function startCountUp(sel){
   document.querySelectorAll(sel).forEach(el=>{
-    const target=+el.dataset.target,suffix=el.dataset.suffix||'';
-    let cur=0;const step=Math.max(1,Math.floor(target/40));
-    const timer=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur+(cur===target?suffix:'');if(cur>=target)clearInterval(timer);},40);
+    const target=+el.dataset.target, suffix=el.dataset.suffix||'';
+    let cur=0; const step=Math.max(1,Math.floor(target/40));
+    const timer=setInterval(()=>{ cur=Math.min(cur+step,target); el.textContent=cur+(cur===target?suffix:''); if(cur>=target)clearInterval(timer); },40);
   });
 }
 
-// ---- INTERSECTION OBSERVER ----
+// ============================================================
+//  INTERSECTION OBSERVER
+// ============================================================
 const obs=new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
       e.target.classList.add('visible');
-      if(e.target.querySelector('.count'))startCountUp('.count');
+      if(e.target.querySelector('.count')) startCountUp('.count');
     }
   });
-},{threshold:0.15,rootMargin:'0px 0px -50px 0px'});
+},{threshold:0.15, rootMargin:'0px 0px -50px 0px'});
 document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
 
-// ---- GESTURE ----
-const videoEl=document.getElementById('input_video');
-const gestureText=document.getElementById('gesture-text');
+// ============================================================
+//  UNIFIED CAMERA  —  Hands (gesture) + FaceMesh (eye track)
+// ============================================================
+const videoEl     = document.getElementById('input_video');
+const gestureText = document.getElementById('gesture-text');
+
 try{
-  const hands=new Hands({locateFile:f=>"https://cdn.jsdelivr.net/npm/@mediapipe/hands/"+f});
-  hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.7});
-  hands.onResults(res=>{
-    if(!res.multiHandLandmarks||!res.multiHandLandmarks.length)return;
-    const lm=res.multiHandLandmarks[0];
-    const indexUp=lm[8].y<lm[6].y,middleUp=lm[12].y<lm[10].y,thumbUp=lm[4].y<lm[3].y-0.05;
-    const intro=document.getElementById('intro-modal');
-    if(intro&&intro.style.display!=='none'){if(thumbUp)closeIntro();return;}
-    if(indexUp&&!middleUp){window.scrollBy(0,-20);gestureText.innerText='↑ SCROLL UP';}
-    else if(indexUp&&middleUp){window.scrollBy(0,20);gestureText.innerText='↓ SCROLL DOWN';}
-    else gestureText.innerText='✋ ACTIVE';
+  // ── MediaPipe Hands (gesture control) ──────────────────
+  const hands = new Hands({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
   });
-  const cam=new Camera(videoEl,{onFrame:async()=>await hands.send({image:videoEl}),width:320,height:240});
+  hands.setOptions({maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.7, minTrackingConfidence:0.7});
+
+  hands.onResults(res=>{
+    if(!res.multiHandLandmarks || !res.multiHandLandmarks.length) return;
+    const lm = res.multiHandLandmarks[0];
+    const indexUp  = lm[8].y  < lm[6].y;
+    const middleUp = lm[12].y < lm[10].y;
+    const thumbUp  = lm[4].y  < lm[3].y - 0.05;
+
+    const intro = document.getElementById('intro-modal');
+    if(intro && intro.style.display !== 'none'){
+      if(thumbUp) closeIntro();
+      return;
+    }
+
+    if(currentMode === 'mouse'){
+      if(indexUp && !middleUp){ window.scrollBy(0,-20); gestureText.innerText='↑ SCROLL UP'; }
+      else if(indexUp && middleUp){ window.scrollBy(0,20); gestureText.innerText='↓ SCROLL DOWN'; }
+      else gestureText.innerText='✋ ACTIVE';
+    } else {
+      gestureText.innerText = '👁 EYE MODE';
+    }
+  });
+
+  // ── Single Camera — feeds both Hands & FaceMesh ────────
+  const cam = new Camera(videoEl, {
+    onFrame: async ()=>{
+      await hands.send({image: videoEl});
+      if(currentMode === 'eye' && faceMeshReady && faceMesh){
+        await faceMesh.send({image: videoEl});
+      }
+    },
+    width: 320, height: 240
+  });
   cam.start();
-}catch(e){console.log('Gesture unavailable');}
+
+}catch(e){
+  console.warn('Camera init failed:', e);
+}
 </script>
 </body>
 </html>
